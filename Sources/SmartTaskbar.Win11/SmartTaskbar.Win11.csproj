@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.22000.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>Resources\Logo-White.ico</ApplicationIcon>
+    <Authors>Chanple</Authors>
+    <Version>2.0.0</Version>
+    <Description>SmartTaskbar for Windows 11 - with maximize-hide mode</Description>
+    <Copyright>Copyright (c) 2018-2026 ChanpleCai</Copyright>
+    <RootNamespace>SmartTaskbar.Win11</RootNamespace>
+    <AssemblyName>SmartTaskbar.Win11</AssemblyName>
+    <SupportedOSPlatformVersion>10.0.22000.0</SupportedOSPlatformVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Resources\Logo-White.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="IconResource.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>IconResource.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="IconResource.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>IconResource.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

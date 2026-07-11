@@ -1,0 +1,98 @@
+using System.IO;
+using System.Text.Json;
+using SmartTaskbar.Win11.Abstractions;
+
+namespace SmartTaskbar.Win11.Worker.Services
+{
+    public class LocalSettingsStore : ISettingsStore
+    {
+        private readonly string _filePath;
+        private Dictionary<string, JsonElement> _cache = new();
+
+        public LocalSettingsStore()
+        {
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var dir = Path.Combine(appData, "SmartTaskbar.Win11");
+            Directory.CreateDirectory(dir);
+            _filePath = Path.Combine(dir, "settings.json");
+            Load();
+        }
+
+        private void Load()
+        {
+            if (!File.Exists(_filePath))
+            {
+                _cache = new Dictionary<string, JsonElement>();
+                return;
+            }
+
+            try
+            {
+                using var document = JsonDocument.Parse(File.ReadAllText(_filePath));
+                _cache = new Dictionary<string, JsonElement>();
+                foreach (var property in document.RootElement.EnumerateObject())
+                    _cache[property.Name] = property.Value.Clone();
+            }
+            catch
+            {
+                _cache = new Dictionary<string, JsonElement>();
+            }
+        }
+
+        private void Save()
+        {
+            var dict = new Dictionary<string, object?>();
+            foreach (var pair in _cache)
+                dict[pair.Key] = JsonSerializer.Deserialize<object>(pair.Value.GetRawText());
+
+            var json = JsonSerializer.Serialize(dict, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(_filePath, json);
+        }
+
+        public T? GetValue<T>(string key)
+        {
+            if (!_cache.TryGetValue(key, out var element))
+                return default;
+
+            try
+            {
+                var targetType = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
+
+                if (targetType == typeof(string))
+                {
+                    if (element.ValueKind == JsonValueKind.String)
+                        return (T?)(object?)element.GetString();
+                    return default;
+                }
+
+                if (targetType == typeof(bool))
+                {
+                    if (element.ValueKind == JsonValueKind.True)
+                        return (T?)(object)true;
+                    if (element.ValueKind == JsonValueKind.False)
+                        return (T?)(object)false;
+                    return default;
+                }
+
+                if (targetType == typeof(int))
+                {
+                    if (element.ValueKind == JsonValueKind.Number && element.TryGetInt32(out var number))
+                        return (T?)(object)number;
+                    return default;
+                }
+
+                return element.Deserialize<T>();
+            }
+            catch
+            {
+                return default;
+            }
+        }
+
+        public void SetValue<T>(string key, T value)
+        {
+            _cache[key] = JsonSerializer.SerializeToElement(value);
+            Save();
+        }
+    }
+}
