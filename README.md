@@ -86,21 +86,21 @@ dotnet build Sources/SmartTaskbar.Win11/SmartTaskbar.Win11.csproj -c Release
 dotnet test Sources/SmartTaskbar.Win11.Tests/SmartTaskbar.Win11.Tests.csproj
 ```
 
-### 自包含发布
+### 发布安装包（两种）
 
 ```powershell
+# 小体积（框架依赖）
+dotnet publish Sources/SmartTaskbar.Win11/SmartTaskbar.Win11.csproj `
+  -c Release -r win-x64 --self-contained false `
+  -o publish-framework
+
+# 大体积（自包含）
 dotnet publish Sources/SmartTaskbar.Win11/SmartTaskbar.Win11.csproj `
   -c Release -r win-x64 --self-contained true `
   -o publish-selfcontained
 ```
 
-### 安装包
-
-使用 Inno Setup 6 编译：
-
-```text
-installer/SmartTaskbar.Win11.iss
-```
+使用 Inno Setup 6 分别编译（见 `installer/SmartTaskbar.Win11.iss` 文件头注释）。
 
 ## 已知限制
 
