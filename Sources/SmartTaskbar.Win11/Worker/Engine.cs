@@ -79,6 +79,10 @@ namespace SmartTaskbar.Win11
 
         #region MaximizeHide Mode
 
+        // Scan maximized windows every 3 ticks (~375ms) to reduce EnumWindows cost.
+        // Mouse-over still runs every tick for responsive show-on-hover.
+        private const int MaximizeScanIntervalTicks = 3;
+
         private static void HandleMaximizeHideMode()
         {
             switch (_taskbar.CheckIfMouseOver(NonMouseOverShowHandleSet))
@@ -91,6 +95,9 @@ namespace SmartTaskbar.Win11
                 case TaskbarBehavior.Pending:
                     break;
             }
+
+            if (_timerCount % MaximizeScanIntervalTicks != 0)
+                return;
 
             if (_maximizeDetector.HasMaximizedWindowOnMonitor(_taskbar.Monitor))
                 _taskbar.HideTaskbar();

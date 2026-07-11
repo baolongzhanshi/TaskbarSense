@@ -10,12 +10,27 @@ namespace SmartTaskbar.Win11.Worker.Services
         private Dictionary<string, JsonElement> _cache = new();
 
         public LocalSettingsStore()
+            : this(GetDefaultFilePath())
+        {
+        }
+
+        public LocalSettingsStore(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+                throw new ArgumentException("Settings file path is required.", nameof(filePath));
+
+            _filePath = filePath;
+            var dir = Path.GetDirectoryName(_filePath);
+            if (!string.IsNullOrEmpty(dir))
+                Directory.CreateDirectory(dir);
+
+            Load();
+        }
+
+        public static string GetDefaultFilePath()
         {
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            var dir = Path.Combine(appData, "SmartTaskbar.Win11");
-            Directory.CreateDirectory(dir);
-            _filePath = Path.Combine(dir, "settings.json");
-            Load();
+            return Path.Combine(appData, "SmartTaskbar.Win11", "settings.json");
         }
 
         private void Load()

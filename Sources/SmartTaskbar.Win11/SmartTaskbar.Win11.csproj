@@ -7,10 +7,10 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>Resources\Logo-White.ico</ApplicationIcon>
-    <Authors>Chanple</Authors>
+    <Authors>baolongzhanshi</Authors>
     <Version>2.0.0</Version>
     <Description>SmartTaskbar for Windows 11 - with maximize-hide mode</Description>
-    <Copyright>Copyright (c) 2018-2026 ChanpleCai</Copyright>
+    <Copyright>Copyright (c) 2018-2026 ChanpleCai; Copyright (c) 2026 baolongzhanshi (Win11 fork)</Copyright>
     <RootNamespace>SmartTaskbar.Win11</RootNamespace>
     <AssemblyName>SmartTaskbar.Win11</AssemblyName>
     <SupportedOSPlatformVersion>10.0.22000.0</SupportedOSPlatformVersion>

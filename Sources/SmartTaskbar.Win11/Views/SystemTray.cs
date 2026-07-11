@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using Microsoft.Win32;
-using SmartTaskbar.Win11.Helpers;
 using SmartTaskbar.Win11.Languages;
 using SmartTaskbar.Win11.Models;
 using SmartTaskbar.Win11.Worker.Services;
@@ -23,12 +22,10 @@ namespace SmartTaskbar.Win11
         private readonly NotifyIcon _notifyIcon;
         private readonly ResourceCulture _resourceCulture = new();
         private readonly ToolStripMenuItem _showBarOnExit;
-        private readonly TaskbarAlignmentHelper _taskbarAlignment;
 
         public SystemTray()
         {
             UserSettings.Instance = new UserSettings(new LocalSettingsStore());
-            _taskbarAlignment = new TaskbarAlignmentHelper(new WindowsRegistryReader());
 
             #region Initialization
 
@@ -106,8 +103,6 @@ namespace SmartTaskbar.Win11
             _notifyIcon.MouseDoubleClick += NotifyIconOnMouseDoubleClick;
 
             SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
-
-            Application.ApplicationExit += Application_ApplicationExit;
 
             #endregion
         }
@@ -245,11 +240,15 @@ namespace SmartTaskbar.Win11
 
         private void ExitOnClick(object? s, EventArgs e)
         {
+            SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
+
             if (UserSettings.Instance.ShowTaskbarWhenExit)
                 Fun.CancelAutoHide();
             else
                 HideBar();
-            _container?.Dispose();
+
+            _notifyIcon.Visible = false;
+            _container.Dispose();
             Application.Exit();
         }
 
@@ -288,12 +287,5 @@ namespace SmartTaskbar.Win11
 
         private void AnimationInBarOnClick(object? s, EventArgs e)
             => _animationInBar.Checked = Fun.ChangeTaskbarAnimation();
-
-        private static async void Application_ApplicationExit(object? sender, EventArgs e)
-        {
-            // Weird bug.
-            await Task.Delay(500);
-            Process.GetCurrentProcess().Kill();
-        }
     }
 }

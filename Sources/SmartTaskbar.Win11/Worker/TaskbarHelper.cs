@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 
 namespace SmartTaskbar.Win11
 {
@@ -27,15 +27,13 @@ namespace SmartTaskbar.Win11
                 // unable to get the rectangle of the taskbar.
                 return new TaskbarInfo();
 
-            // determine the taskbar position
+            // Use the monitor that actually hosts the main taskbar (may not be the primary display on Win11).
+            var monitor = MonitorFromWindow(handle, TrayMonitorDefaultToNearest);
+            var screenBounds = GetSafeScreenBounds(handle);
 
-            var monitor = MonitorFromPoint(PointZero, TrayMonitorDefaultToPrimary);
-
-            // todo: The main taskbar is not always on the Primary desktop!!! When this happens, the program will run abnormally
-
-            if (rect.right - rect.left == Screen.PrimaryScreen.Bounds.Width)
+            if (rect.right - rect.left == screenBounds.Width)
             {
-                var bottomΔ = rect.bottom - Screen.PrimaryScreen.Bounds.Bottom;
+                var bottomΔ = rect.bottom - screenBounds.Bottom;
                 // taskbar on the top or bottom
                 if (bottomΔ == 0)
                     return new TaskbarInfo(handle,
@@ -63,7 +61,7 @@ namespace SmartTaskbar.Win11
                                            TaskbarPosition.Bottom,
                                            monitor);
 
-                var topΔ = rect.top - Screen.PrimaryScreen.Bounds.Top;
+                var topΔ = rect.top - screenBounds.Top;
                 return new TaskbarInfo(handle,
                                        new TagRect
                                        {
@@ -79,7 +77,7 @@ namespace SmartTaskbar.Win11
 
             // taskbar on the left or right
 
-            var leftΔ = rect.left - Screen.PrimaryScreen.Bounds.Left;
+            var leftΔ = rect.left - screenBounds.Left;
 
             if (leftΔ == 0)
                 return new TaskbarInfo(handle,
@@ -107,7 +105,7 @@ namespace SmartTaskbar.Win11
                                        TaskbarPosition.Left,
                                        monitor);
 
-            var rightΔ = rect.right - Screen.PrimaryScreen.Bounds.Right;
+            var rightΔ = rect.right - screenBounds.Right;
             return new TaskbarInfo(handle,
                                    new TagRect
                                    {
@@ -127,9 +125,7 @@ namespace SmartTaskbar.Win11
 
         private const uint TrayBarFlag = 0x05D1;
 
-        private const uint TrayMonitorDefaultToPrimary = 1;
         private const uint TrayMonitorDefaultToNearest = 2;
-        private static readonly TagPoint PointZero = new() {x = 0, y = 0};
 
         /// <summary>
         ///     Hide the taskbar, in auto-hide mode
@@ -404,8 +400,41 @@ namespace SmartTaskbar.Win11
         }
 
         public static bool AreaCompare(this in TagRect rect)
-            => 3 * (rect.bottom - rect.top) * (rect.right - rect.left)
-               > Screen.PrimaryScreen.Bounds.Width * Screen.PrimaryScreen.Bounds.Height;
+        {
+            var bounds = GetSafeScreenBounds(IntPtr.Zero);
+            return 3 * (rect.bottom - rect.top) * (rect.right - rect.left)
+                   > bounds.Width * bounds.Height;
+        }
+
+        /// <summary>
+        ///     Resolve a non-null screen bounds for the given window (or a safe fallback).
+        /// </summary>
+        private static Rectangle GetSafeScreenBounds(IntPtr hwnd)
+        {
+            if (hwnd != IntPtr.Zero)
+            {
+                try
+                {
+                    var fromHandle = Screen.FromHandle(hwnd);
+                    if (fromHandle != null)
+                        return fromHandle.Bounds;
+                }
+                catch
+                {
+                    // fall through
+                }
+            }
+
+            var primary = Screen.PrimaryScreen;
+            if (primary != null)
+                return primary.Bounds;
+
+            var first = Screen.AllScreens.FirstOrDefault();
+            if (first != null)
+                return first.Bounds;
+
+            return new Rectangle(0, 0, SystemInformation.VirtualScreen.Width, SystemInformation.VirtualScreen.Height);
+        }
 
         #endregion
     }

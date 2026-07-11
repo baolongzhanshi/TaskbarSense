@@ -6,44 +6,36 @@ namespace SmartTaskbar.Win11.Tests;
 
 public class LocalSettingsStoreTests : IDisposable
 {
-    private readonly string _backupPath;
-    private readonly string _settingsDir;
+    private readonly string _tempDir;
     private readonly string _settingsPath;
 
     public LocalSettingsStoreTests()
     {
-        _settingsDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "SmartTaskbar.Win11");
-        _settingsPath = Path.Combine(_settingsDir, "settings.json");
-        _backupPath = _settingsPath + ".bak-test";
-
-        Directory.CreateDirectory(_settingsDir);
-        if (File.Exists(_settingsPath))
-            File.Copy(_settingsPath, _backupPath, true);
-        if (File.Exists(_settingsPath))
-            File.Delete(_settingsPath);
+        _tempDir = Path.Combine(Path.GetTempPath(), "SmartTaskbar.Win11.Tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(_tempDir);
+        _settingsPath = Path.Combine(_tempDir, "settings.json");
     }
 
     public void Dispose()
     {
-        if (File.Exists(_settingsPath))
-            File.Delete(_settingsPath);
-
-        if (File.Exists(_backupPath))
+        try
         {
-            File.Copy(_backupPath, _settingsPath, true);
-            File.Delete(_backupPath);
+            if (Directory.Exists(_tempDir))
+                Directory.Delete(_tempDir, true);
+        }
+        catch
+        {
+            // best-effort cleanup
         }
     }
 
     [Fact]
     public void GetValue_BoolNullable_False_IsPreservedAcrossRestart()
     {
-        var writer = new LocalSettingsStore();
+        var writer = new LocalSettingsStore(_settingsPath);
         writer.SetValue("ShowTaskbarWhenExit", false);
 
-        var reader = new LocalSettingsStore();
+        var reader = new LocalSettingsStore(_settingsPath);
         var value = reader.GetValue<bool?>("ShowTaskbarWhenExit");
 
         value.Should().BeFalse();
@@ -52,17 +44,17 @@ public class LocalSettingsStoreTests : IDisposable
     [Fact]
     public void GetValue_String_IsPreservedAcrossRestart()
     {
-        var writer = new LocalSettingsStore();
+        var writer = new LocalSettingsStore(_settingsPath);
         writer.SetValue("AutoModeType", "MaximizeHide");
 
-        var reader = new LocalSettingsStore();
+        var reader = new LocalSettingsStore(_settingsPath);
         reader.GetValue<string>("AutoModeType").Should().Be("MaximizeHide");
     }
 
     [Fact]
     public void GetValue_MissingKey_ReturnsDefault()
     {
-        var store = new LocalSettingsStore();
+        var store = new LocalSettingsStore(_settingsPath);
         store.GetValue<string>("MissingKey").Should().BeNull();
         store.GetValue<bool?>("MissingBool").Should().BeNull();
     }
