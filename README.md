@@ -1,45 +1,119 @@
+# SmartTaskbar.Win11
 
-
-SmartTaskbar  <img src="https://github.com/ChanpleCai/SmartTaskbar/blob/main/logo/logo.png" width="24">
-=====
-[![Version](https://badge.fury.io/gh/ChanpleCai%2FSmartTaskbar.svg)](https://github.com/ChanpleCai/SmartTaskbar/releases/download/v1.4.5/SmartTaskbar_Setup.exe)
-[![Latest Release](https://img.shields.io/github/downloads/ChanpleCai/SmartTaskbar/latest/total.svg)](https://github.com/ChanpleCai/SmartTaskbar/releases/download/v1.4.5/SmartTaskbar_Setup.exe)
-[![All Releases](https://img.shields.io/github/downloads/ChanpleCai/SmartTaskbar/total.svg)](https://github.com/ChanpleCai/SmartTaskbar/releases)
+[![Release](https://img.shields.io/github/v/release/baolongzhanshi/SmartTaskbar.Win11)](https://github.com/baolongzhanshi/SmartTaskbar.Win11/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/baolongzhanshi/SmartTaskbar.Win11/total.svg)](https://github.com/baolongzhanshi/SmartTaskbar.Win11/releases)
 [![License](http://img.shields.io/:license-MIT-blue.svg?style=flat)](LICENSE)
-[![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
-[![LICENSE](https://img.shields.io/badge/license-Anti%20996-blue.svg)](https://github.com/996icu/996.ICU/blob/master/LICENSE)
 
-* SmartTaskbar is a lightweight utility which can automatically switch the display state of the Windows Taskbar.
+**SmartTaskbar.Win11** 是一个面向 **Windows 11** 的轻量级任务栏自动隐藏工具。
 
-Features
------
+> 本项目是 [ChanpleCai/SmartTaskbar](https://github.com/ChanpleCai/SmartTaskbar) 的二次开发版本（MIT 协议），在原版能力基础上增加了 Windows 11 适配与「最大化隐藏」模式。
 
-#### Auto Mode
+仓库地址：https://github.com/baolongzhanshi/SmartTaskbar.Win11
 
-* In the Auto Mode, SmartTaskbar will set the Taskbar to hide when When the focused window and the taskbar intersect<sup>[[1]](#footnote)</sup>.
-  
-* Double-click the tray icon to switch the display status of the taskbar between Show or Auto-Hide.
+## 与原版的关系
 
-Known Issues
-----  
+| 项目 | 说明 |
+|------|------|
+| 原版项目 | [ChanpleCai/SmartTaskbar](https://github.com/ChanpleCai/SmartTaskbar) |
+| 本仓库 | [baolongzhanshi/SmartTaskbar.Win11](https://github.com/baolongzhanshi/SmartTaskbar.Win11) |
+| 主要程序 | `Sources/SmartTaskbar.Win11` |
+| 目标框架 | .NET 8 / Windows 11 |
+| 新增能力 | MaximizeHide（同显示器存在最大化窗口时自动隐藏任务栏） |
 
-* Some applications are not compatible with Auto-Hide mode (This problem has nothing to do with SmartTaskbar), for example:
-  
-    * Some applications use special maximization logic. When the mouse is moved to the taskbar position, the taskbar doesn't pop up. In this case, you can use the shortcut (`WIN` + `T`) to force the taskbar to pop up.
+原版代码仍保留在仓库中，便于对照；日常使用请安装本仓库发布的 **SmartTaskbar.Win11** 安装包。
 
-* Starting from [v1.4.3](https://github.com/ChanpleCai/SmartTaskbar/releases), the following behavior only occurs when the hook fails.
->* The Auto Mode is based on Auto-Hide mode, so it does not change the default behavior of window taskbar in Auto-Hide mode. Therefore, you will encounter the following "bugs", but they are not actually:
->
->    * When you close the start menu or the search panel, the taskbar will be automatically hidden (this is the system's own behavior), and then may be displayed again immediately (this is the work of SmartTaskbar).
->   
->    * When there is already a full-screen application, open a window that does not intersect the taskbar, and the taskbar will be automatically hidden when the mouse is moved away (this is the system's own behavior), and then it may be displayed again immediately (this is SmartTaskbar working ), since the currently focused window does not intersect the taskbar.
+## 功能特性
 
-Build
------
-* Visual Studio 2022.
+### Auto 模式（继承原版）
 
-Notice
-------
-* <a name="footnote"> The status of the taskbar does not change when the mouse is over the taskbar.</a>  
+- 根据前台窗口与任务栏是否相交，自动切换任务栏显示 / 隐藏
+- 双击托盘图标可快速切换任务栏显示状态
 
-* The [Microsoft Store](https://www.microsoft.com/en-us/p/smarttaskbar/9pjm69mps6t9?activetab=pivot%3aoverviewtab) version is slightly less functional and stable.
+### MaximizeHide 模式（二开新增）
+
+- 检测**同一显示器**上是否存在最大化窗口
+- 有最大化窗口时自动隐藏任务栏
+- 无最大化窗口时恢复显示
+- 适合需要更接近「全屏沉浸」体验的 Windows 11 使用场景
+
+### 其他
+
+- 系统托盘菜单（动画开关、退出时显示任务栏、关于、退出）
+- Windows 11 任务栏居中 / 左对齐检测
+- 多显示器菜单定位改进
+- 配置保存在本地 `%LocalAppData%\SmartTaskbar.Win11\settings.json`
+- 安装包**自包含**，目标电脑无需预装 .NET 8 Desktop Runtime
+
+## 安装
+
+1. 打开 [Releases](https://github.com/baolongzhanshi/SmartTaskbar.Win11/releases)
+2. 下载 `SmartTaskbar.Win11_Setup_2.0.0.exe`
+3. 双击安装并启动
+
+**系统要求：** Windows 11（10.0.22000 及以上）
+
+安装后程序运行在系统托盘（通知区域）。如果看不到图标，请检查托盘溢出区。
+
+## 使用说明
+
+右键托盘图标：
+
+| 菜单项 | 作用 |
+|--------|------|
+| 关于 | 打开本项目 GitHub 页面 |
+| 动画 | 开关任务栏动画 |
+| 自动模式 | 启用 / 关闭 Auto 模式 |
+| 最大化隐藏模式 | 启用 / 关闭 MaximizeHide 模式 |
+| 退出后显示任务栏 | 退出程序时是否恢复任务栏显示 |
+| 退出 | 退出程序 |
+
+说明：
+
+- Auto 与 MaximizeHide 为互斥模式，同一时间只会启用一种
+- 双击托盘图标会关闭自动模式，并切换任务栏显示状态
+
+## 构建
+
+### 环境
+
+- Visual Studio 2022 或 .NET 8 SDK
+- Windows 11 开发环境
+
+### 命令行构建
+
+```powershell
+dotnet build Sources/SmartTaskbar.Win11/SmartTaskbar.Win11.csproj -c Release
+dotnet test Sources/SmartTaskbar.Win11.Tests/SmartTaskbar.Win11.Tests.csproj
+```
+
+### 自包含发布
+
+```powershell
+dotnet publish Sources/SmartTaskbar.Win11/SmartTaskbar.Win11.csproj `
+  -c Release -r win-x64 --self-contained true `
+  -o publish-selfcontained
+```
+
+### 安装包
+
+使用 Inno Setup 6 编译：
+
+```text
+installer/SmartTaskbar.Win11.iss
+```
+
+## 已知限制
+
+- 主任务栏不在主显示器时，部分逻辑可能表现异常（继承自原版实现）
+- 某些应用使用特殊最大化逻辑时，任务栏可能不会按预期弹出；可尝试 `Win + T`
+- Auto-Hide 相关行为会受到 Windows 系统本身规则影响
+
+## 致谢
+
+- 原作者与原项目：[ChanpleCai/SmartTaskbar](https://github.com/ChanpleCai/SmartTaskbar)
+- 本仓库在原版基础上完成 Windows 11 适配、MaximizeHide 模式、.NET 8 迁移与安装打包
+
+## 许可证
+
+本项目遵循 [MIT License](LICENSE)。  
+二次开发请保留原作者版权声明，并遵守 MIT 许可要求。
