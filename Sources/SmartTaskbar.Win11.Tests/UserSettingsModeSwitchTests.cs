@@ -6,11 +6,14 @@ using Xunit;
 
 namespace SmartTaskbar.Win11.Tests;
 
-public class EngineModeSwitchTests
+/// <summary>
+/// Mode switching persistence via <see cref="UserSettings"/> (not the UI Engine timer loop).
+/// </summary>
+public class UserSettingsModeSwitchTests
 {
     private readonly ISettingsStore _store;
 
-    public EngineModeSwitchTests()
+    public UserSettingsModeSwitchTests()
     {
         _store = Substitute.For<ISettingsStore>();
         _store.GetValue<string>("AutoModeType").Returns("None");

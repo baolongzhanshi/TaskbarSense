@@ -16,7 +16,7 @@
 #define MyAppIcon "d:\Desktop\SmartTaskbar\Sources\SmartTaskbar.Win11\Resources\Logo-White.ico"
 #define MyOutputDir "D:\Downloads"
 #ifndef MyOutputBase
-  #define MyOutputBase "TaskbarSense_Setup_2.1.1_SelfContained"
+  #define MyOutputBase "TaskbarSense_Setup_2.1.3_SelfContained"
 #endif
 #ifndef MyPackageKind
   #define MyPackageKind "selfcontained"

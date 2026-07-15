@@ -33,7 +33,7 @@
                && Monitor == other.Monitor
                && Rect == other.Rect;
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
             => obj is ForegroundWindowInfo other && Equals(other);
 
         public override int GetHashCode()
