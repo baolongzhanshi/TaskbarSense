@@ -6,6 +6,13 @@ namespace SmartTaskbar.Win11.Models
     public class UserSettings
     {
         private const string StartupValueName = "TaskbarSense";
+        private static readonly string[] LegacyStartupValueNames =
+        {
+            "SmartTaskbar.Win11",
+            "SmartTaskbar",
+            "TaskbarSense.Win11"
+        };
+
         private readonly ISettingsStore _store;
         private UserConfiguration _configuration;
 
@@ -29,10 +36,10 @@ namespace SmartTaskbar.Win11.Models
                     _store.GetValue<bool?>(nameof(UserConfiguration.ShowTaskbarWhenExit)) ?? true,
                 RunAtStartup =
                     _store.GetValue<bool?>(nameof(UserConfiguration.RunAtStartup))
-                    ?? IsStartupEnabled()
+                    ?? IsAnyStartupEnabled()
             };
 
-            // Keep registry in sync with persisted preference.
+            // Keep registry in sync and remove legacy Run keys.
             ApplyStartup(_configuration.RunAtStartup);
         }
 
@@ -84,13 +91,25 @@ namespace SmartTaskbar.Win11.Models
                 _ => "Off"
             };
 
-        private static bool IsStartupEnabled()
+        private static bool IsAnyStartupEnabled()
         {
             try
             {
                 using var key = Registry.CurrentUser.OpenSubKey(
                     @"Software\Microsoft\Windows\CurrentVersion\Run", false);
-                return key?.GetValue(StartupValueName) is string;
+                if (key is null)
+                    return false;
+
+                if (key.GetValue(StartupValueName) is string)
+                    return true;
+
+                foreach (var legacy in LegacyStartupValueNames)
+                {
+                    if (key.GetValue(legacy) is string)
+                        return true;
+                }
+
+                return false;
             }
             catch
             {
@@ -106,6 +125,13 @@ namespace SmartTaskbar.Win11.Models
                     @"Software\Microsoft\Windows\CurrentVersion\Run", true);
                 if (key is null)
                     return;
+
+                // Always purge legacy startup entries to avoid double-launch.
+                foreach (var legacy in LegacyStartupValueNames)
+                {
+                    try { key.DeleteValue(legacy, false); }
+                    catch { /* ignore */ }
+                }
 
                 if (enable)
                 {

@@ -6,7 +6,7 @@
 
 **TaskbarSense** 是面向 **Windows 11** 的轻量任务栏智能隐藏工具。
 
-> 本项目基于 [ChanpleCai/SmartTaskbar](https://github.com/ChanpleCai/SmartTaskbar)（MIT）二次开发。产品名与仓库为 **TaskbarSense**，工程目录仍为 `Sources/SmartTaskbar.Win11`。
+> 本项目基于 [ChanpleCai/SmartTaskbar](https://github.com/ChanpleCai/SmartTaskbar)（MIT）二次开发。仓库与产品名：**TaskbarSense**；工程目录仍为 `Sources/SmartTaskbar.Win11`，主程序为 **`TaskbarSense.exe`**。
 
 仓库：https://github.com/baolongzhanshi/TaskbarSense
 
@@ -15,18 +15,20 @@
 - **Auto**：前台窗口与任务栏相交时自动隐藏
 - **MaximizeHide**：同显示器存在最大化 / 无边框全屏窗口时隐藏任务栏
 - 托盘菜单：动画、开机自启、退出后恢复任务栏
-- 托盘 Tooltip 显示当前模式（`TaskbarSense | Auto`）
-- 显示设置变化 / 解锁会话后自动刷新任务栏信息
+- 托盘 Tooltip 本地化显示当前模式
+- 显示设置变化 / 解锁会话后自动刷新（UI 线程安全）
 - 配置：`%LocalAppData%\TaskbarSense\settings.json`（会从旧路径自动迁移）
 
 ## 安装
 
 | 安装包 | 体积 | .NET 8 |
 |--------|------|--------|
-| `TaskbarSense_Setup_2.1.0_Framework.exe` | 约 6 MB（推荐） | **需要** [Desktop Runtime x64](https://dotnet.microsoft.com/download/dotnet/8.0) |
-| `TaskbarSense_Setup_2.1.0_SelfContained.exe` | 约 52 MB | **不需要** |
+| `TaskbarSense_Setup_2.1.1_Framework.exe` | 约 6 MB（推荐） | **需要** [Desktop Runtime x64](https://dotnet.microsoft.com/download/dotnet/8.0) |
+| `TaskbarSense_Setup_2.1.1_SelfContained.exe` | 约 52 MB | **不需要** |
 
 从 [Releases](https://github.com/baolongzhanshi/TaskbarSense/releases) 下载。系统要求：Windows 11（10.0.22000+）。
+
+> 开机自启请在托盘菜单中开启（安装器不再单独创建启动项，避免重复启动）。
 
 ## 使用
 
@@ -36,9 +38,9 @@
 |------|------|
 | 智能模式 | Auto（与最大化隐藏互斥） |
 | 最大化隐藏模式 | MaximizeHide |
-| 开机自启 | 写入当前用户 Run 注册表 |
-| 退出后显示任务栏 | 退出时是否 `CancelAutoHide` 恢复普通任务栏 |
-| 双击托盘 | 关闭智能模式并恢复普通任务栏 |
+| 开机自启 | 写入当前用户 Run 注册表（并清理旧启动项） |
+| 退出后显示任务栏 | 退出时是否恢复普通任务栏 |
+| 双击托盘 | 关闭智能模式并恢复普通任务栏（不会先闪菜单） |
 
 ## 构建
 

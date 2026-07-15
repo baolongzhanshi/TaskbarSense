@@ -5,12 +5,14 @@ using SmartTaskbar.Win11.Helpers;
 using SmartTaskbar.Win11.Languages;
 using SmartTaskbar.Win11.Models;
 using SmartTaskbar.Win11.Worker.Services;
+using Timer = System.Windows.Forms.Timer;
 
 namespace SmartTaskbar.Win11
 {
     internal class SystemTray : ApplicationContext
     {
         private const int TrayTolerance = 4;
+        private const int RightClickMenuDelayMs = 280;
         private const string ProductDisplayName = "TaskbarSense";
 
         private readonly ToolStripMenuItem _animationInBar;
@@ -26,6 +28,9 @@ namespace SmartTaskbar.Win11
         private readonly NotifyIcon _notifyIcon;
         private readonly ResourceCulture _resourceCulture = new();
         private readonly TaskbarAlignmentHelper _taskbarAlignment;
+        private readonly Timer _rightClickMenuTimer;
+
+        private bool _suppressNextRightClickMenu;
 
         public SystemTray()
         {
@@ -70,6 +75,12 @@ namespace SmartTaskbar.Win11
                 Icon = Fun.IsLightThemeSafe() ? IconResource.Logo_Black : IconResource.Logo_White,
                 Visible = true
             };
+
+            _rightClickMenuTimer = new Timer(_container)
+            {
+                Interval = RightClickMenuDelayMs
+            };
+            _rightClickMenuTimer.Tick += RightClickMenuTimerOnTick;
 
             #endregion
 
@@ -124,6 +135,10 @@ namespace SmartTaskbar.Win11
 
         private void NotifyIconOnMouseDoubleClick(object? s, MouseEventArgs e)
         {
+            // Cancel pending single-click menu so double-click does not flash the menu.
+            _rightClickMenuTimer.Stop();
+            _suppressNextRightClickMenu = true;
+
             UserSettings.Instance.AutoModeType = AutoModeType.None;
             Fun.CancelAutoHide();
             UpdateModeCheckState();
@@ -132,7 +147,23 @@ namespace SmartTaskbar.Win11
 
         private void NotifyIconOnMouseClick(object? s, MouseEventArgs e)
         {
-            if (e.Button != MouseButtons.Right) return;
+            if (e.Button != MouseButtons.Right)
+                return;
+
+            if (_suppressNextRightClickMenu)
+            {
+                _suppressNextRightClickMenu = false;
+                return;
+            }
+
+            // Delay menu so a double-click can cancel it.
+            _rightClickMenuTimer.Stop();
+            _rightClickMenuTimer.Start();
+        }
+
+        private void RightClickMenuTimerOnTick(object? sender, EventArgs e)
+        {
+            _rightClickMenuTimer.Stop();
 
             _animationInBar.Checked = Fun.IsEnableTaskbarAnimation();
             _showBarOnExit.Checked = UserSettings.Instance.ShowTaskbarWhenExit;
@@ -154,9 +185,18 @@ namespace SmartTaskbar.Win11
             _notifyIcon.Text = BuildTooltip();
         }
 
-        private static string BuildTooltip()
+        private string BuildTooltip()
         {
-            var mode = UserSettings.GetModeDisplayName(UserSettings.Instance.AutoModeType);
+            var mode = UserSettings.Instance.AutoModeType switch
+            {
+                AutoModeType.Auto => _resourceCulture.GetString(LangName.Auto),
+                AutoModeType.MaximizeHide => _resourceCulture.GetString(LangName.MaximizeHide),
+                _ => _resourceCulture.GetString(LangName.ModeOff)
+            };
+
+            if (string.IsNullOrWhiteSpace(mode))
+                mode = UserSettings.GetModeDisplayName(UserSettings.Instance.AutoModeType);
+
             var text = $"{ProductDisplayName} | {mode}";
             return text.Length <= 63 ? text : text[..63];
         }
@@ -171,17 +211,23 @@ namespace SmartTaskbar.Win11
             var screenBounds = taskbarScreen.Bounds;
             var centered = _taskbarAlignment.IsCentered;
 
+            // Ensure menu size is measured before positioning.
+            _contextMenuStrip.PerformLayout();
+            var menuSize = _contextMenuStrip.GetPreferredSize(Size.Empty);
+            if (menuSize.Width <= 0 || menuSize.Height <= 0)
+                menuSize = _contextMenuStrip.Size;
+
             switch (taskbar.Position)
             {
                 case TaskbarPosition.Bottom:
                 {
-                    var menuY = taskbar.Rect.top - _contextMenuStrip.Height - TrayTolerance;
+                    var menuY = taskbar.Rect.top - menuSize.Height - TrayTolerance;
                     var menuX = centered
-                        ? Cursor.Position.X - _contextMenuStrip.Width / 2
+                        ? Cursor.Position.X - menuSize.Width / 2
                         : Cursor.Position.X - TrayTolerance;
 
                     menuX = Math.Max(screenBounds.Left + TrayTolerance,
-                        Math.Min(menuX, screenBounds.Right - _contextMenuStrip.Width - TrayTolerance));
+                        Math.Min(menuX, screenBounds.Right - menuSize.Width - TrayTolerance));
 
                     _contextMenuStrip.Show(menuX, menuY);
                     break;
@@ -190,17 +236,17 @@ namespace SmartTaskbar.Win11
                 {
                     var menuX = taskbar.Rect.right + TrayTolerance;
                     var menuY = Cursor.Position.Y - TrayTolerance;
-                    if (menuY + _contextMenuStrip.Height > screenBounds.Bottom)
-                        menuY = screenBounds.Bottom - _contextMenuStrip.Height - TrayTolerance;
+                    if (menuY + menuSize.Height > screenBounds.Bottom)
+                        menuY = screenBounds.Bottom - menuSize.Height - TrayTolerance;
                     _contextMenuStrip.Show(menuX, menuY);
                     break;
                 }
                 case TaskbarPosition.Right:
                 {
-                    var menuX = taskbar.Rect.left - TrayTolerance - _contextMenuStrip.Width;
+                    var menuX = taskbar.Rect.left - TrayTolerance - menuSize.Width;
                     var menuY = Cursor.Position.Y - TrayTolerance;
-                    if (menuY + _contextMenuStrip.Height > screenBounds.Bottom)
-                        menuY = screenBounds.Bottom - _contextMenuStrip.Height - TrayTolerance;
+                    if (menuY + menuSize.Height > screenBounds.Bottom)
+                        menuY = screenBounds.Bottom - menuSize.Height - TrayTolerance;
                     _contextMenuStrip.Show(menuX, menuY);
                     break;
                 }
@@ -208,10 +254,10 @@ namespace SmartTaskbar.Win11
                 {
                     var menuY = taskbar.Rect.bottom + TrayTolerance;
                     var menuX = centered
-                        ? Cursor.Position.X - _contextMenuStrip.Width / 2
+                        ? Cursor.Position.X - menuSize.Width / 2
                         : Cursor.Position.X - TrayTolerance;
                     menuX = Math.Max(screenBounds.Left + TrayTolerance,
-                        Math.Min(menuX, screenBounds.Right - _contextMenuStrip.Width - TrayTolerance));
+                        Math.Min(menuX, screenBounds.Right - menuSize.Width - TrayTolerance));
                     _contextMenuStrip.Show(menuX, menuY);
                     break;
                 }
@@ -230,7 +276,9 @@ namespace SmartTaskbar.Win11
 
         private void ExitOnClick(object? s, EventArgs e)
         {
+            _rightClickMenuTimer.Stop();
             SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
+            _engine.Dispose();
 
             // Exit policy: default restores normal taskbar; uncheck keeps auto-hide as-is.
             if (UserSettings.Instance.ShowTaskbarWhenExit)

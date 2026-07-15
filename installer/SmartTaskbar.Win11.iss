@@ -1,22 +1,22 @@
-; TaskbarSense (SmartTaskbar.Win11 fork) Installer
+; TaskbarSense Installer
 ; Dual package:
-;   Framework (small):
-;     ISCC /DMyAppSourceDir=...\publish-framework /DMyOutputBase=TaskbarSense_Setup_2.1.0_Framework /DMyPackageKind=framework installer\SmartTaskbar.Win11.iss
-;   SelfContained (large):
-;     ISCC /DMyAppSourceDir=...\publish-selfcontained /DMyOutputBase=TaskbarSense_Setup_2.1.0_SelfContained /DMyPackageKind=selfcontained installer\SmartTaskbar.Win11.iss
+;   Framework:
+;     ISCC /DMyAppSourceDir=...\publish-framework /DMyOutputBase=TaskbarSense_Setup_2.1.1_Framework /DMyPackageKind=framework installer\SmartTaskbar.Win11.iss
+;   SelfContained:
+;     ISCC /DMyAppSourceDir=...\publish-selfcontained /DMyOutputBase=TaskbarSense_Setup_2.1.1_SelfContained /DMyPackageKind=selfcontained installer\SmartTaskbar.Win11.iss
 
 #define MyAppName "TaskbarSense"
-#define MyAppVersion "2.1.0"
+#define MyAppVersion "2.1.1"
 #define MyAppPublisher "baolongzhanshi"
 #define MyAppURL "https://github.com/baolongzhanshi/TaskbarSense"
-#define MyAppExeName "SmartTaskbar.Win11.exe"
+#define MyAppExeName "TaskbarSense.exe"
 #ifndef MyAppSourceDir
   #define MyAppSourceDir "d:\Desktop\SmartTaskbar\publish-selfcontained"
 #endif
 #define MyAppIcon "d:\Desktop\SmartTaskbar\Sources\SmartTaskbar.Win11\Resources\Logo-White.ico"
 #define MyOutputDir "D:\Downloads"
 #ifndef MyOutputBase
-  #define MyOutputBase "TaskbarSense_Setup_2.1.0_SelfContained"
+  #define MyOutputBase "TaskbarSense_Setup_2.1.1_SelfContained"
 #endif
 #ifndef MyPackageKind
   #define MyPackageKind "selfcontained"
@@ -63,7 +63,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-Name: "startupicon"; Description: "开机自动启动"; GroupDescription: "启动选项:"; Flags: unchecked
+; Startup is managed in-app (tray: 开机自启) to avoid duplicate Run entries.
 
 [Files]
 Source: "{#MyAppSourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -72,7 +72,6 @@ Source: "{#MyAppSourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesub
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
-Name: "{userstartup}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: startupicon
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
@@ -80,14 +79,37 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 [UninstallDelete]
 Type: filesandordirs; Name: "{localappdata}\TaskbarSense"
 Type: filesandordirs; Name: "{localappdata}\SmartTaskbar.Win11"
+Type: files; Name: "{userstartup}\TaskbarSense.lnk"
+Type: files; Name: "{userstartup}\SmartTaskbar.Win11.lnk"
+Type: files; Name: "{userstartup}\SmartTaskbar.lnk"
 
 [Code]
-function InitializeSetup(): Boolean;
+procedure KillLegacyProcesses();
 var
   ResultCode: Integer;
+begin
+  Exec('taskkill.exe', '/F /IM TaskbarSense.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec('taskkill.exe', '/F /IM SmartTaskbar.Win11.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec('taskkill.exe', '/F /IM SmartTaskbar.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+end;
+
+procedure CleanupLegacyStartup();
+begin
+  RegDeleteValue(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\Run', 'SmartTaskbar.Win11');
+  RegDeleteValue(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\Run', 'SmartTaskbar');
+  RegDeleteValue(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\Run', 'TaskbarSense.Win11');
+  // Keep TaskbarSense Run value if user enabled in-app; do not force-delete it here.
+  DeleteFile(ExpandConstant('{userstartup}\SmartTaskbar.Win11.lnk'));
+  DeleteFile(ExpandConstant('{userstartup}\SmartTaskbar.lnk'));
+  DeleteFile(ExpandConstant('{userstartup}\TaskbarSense.lnk'));
+end;
+
+function InitializeSetup(): Boolean;
+var
   InstallNet: Integer;
 begin
-  Exec('taskkill.exe', '/F /IM SmartTaskbar.Win11.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  KillLegacyProcesses();
+  CleanupLegacyStartup();
 
 #if MyPackageKind == "framework"
   if MsgBox(
@@ -110,9 +132,9 @@ begin
 end;
 
 function InitializeUninstall(): Boolean;
-var
-  ResultCode: Integer;
 begin
-  Exec('taskkill.exe', '/F /IM SmartTaskbar.Win11.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  KillLegacyProcesses();
+  CleanupLegacyStartup();
+  RegDeleteValue(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\Run', 'TaskbarSense');
   Result := True;
 end;

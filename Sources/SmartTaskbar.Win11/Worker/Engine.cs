@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Threading;
 using SmartTaskbar.Win11.Abstractions;
 using SmartTaskbar.Win11.Worker;
 using SmartTaskbar.Win11.Worker.Services;
@@ -8,9 +9,9 @@ using Timer = System.Windows.Forms.Timer;
 
 namespace SmartTaskbar.Win11
 {
-    internal sealed class Engine
+    internal sealed class Engine : IDisposable
     {
-        private static Timer _timer = null!;
+        private Timer? _timer;
 
         private static int _timerCount;
         private static TaskbarInfo _taskbar;
@@ -24,10 +25,14 @@ namespace SmartTaskbar.Win11
 
         private static MaximizeDetector _maximizeDetector = null!;
         private static ITaskbarControlService _taskbarControl = null!;
+        private static SynchronizationContext? _uiContext;
         private static bool _displayHooksRegistered;
+        private bool _disposed;
 
         public Engine(Container container)
         {
+            _uiContext = SynchronizationContext.Current;
+
             _timer = new Timer(container)
             {
                 Interval = 125
@@ -46,8 +51,20 @@ namespace SmartTaskbar.Win11
 
         public static void RequestRefresh()
         {
-            ClearCaches();
-            _taskbar = TaskbarHelper.InitTaskbar();
+            void DoRefresh()
+            {
+                ClearCaches();
+                _taskbar = TaskbarHelper.InitTaskbar();
+            }
+
+            var ctx = _uiContext;
+            if (ctx is null || ReferenceEquals(SynchronizationContext.Current, ctx))
+            {
+                DoRefresh();
+                return;
+            }
+
+            ctx.Post(_ => DoRefresh(), null);
         }
 
         private static void RegisterDisplayHooks()
@@ -65,6 +82,24 @@ namespace SmartTaskbar.Win11
             {
                 // SystemEvents may fail in some sessions
             }
+        }
+
+        private static void UnregisterDisplayHooks()
+        {
+            if (!_displayHooksRegistered)
+                return;
+
+            try
+            {
+                SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
+                SystemEvents.SessionSwitch -= OnSessionSwitch;
+            }
+            catch
+            {
+                // ignore
+            }
+
+            _displayHooksRegistered = false;
         }
 
         private static void OnDisplaySettingsChanged(object? sender, EventArgs e)
@@ -215,5 +250,23 @@ namespace SmartTaskbar.Win11
         }
 
         #endregion
+
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+
+            _disposed = true;
+            UnregisterDisplayHooks();
+
+            if (_timer is not null)
+            {
+                _timer.Stop();
+                _timer.Tick -= Timer_Tick;
+                _timer = null;
+            }
+
+            ClearCaches();
+        }
     }
 }
