@@ -1,3 +1,5 @@
+using SmartTaskbar.Win11.Models;
+
 namespace SmartTaskbar.Win11.Abstractions
 {
     public interface IWindowStateService
@@ -7,5 +9,7 @@ namespace SmartTaskbar.Win11.Abstractions
         bool IsVisible(IntPtr handle);
 
         string GetClassName(IntPtr handle);
+
+        bool IsFullscreen(IntPtr handle);
     }
 }

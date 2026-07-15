@@ -24,13 +24,43 @@ namespace SmartTaskbar.Win11.Worker.Services
             if (!string.IsNullOrEmpty(dir))
                 Directory.CreateDirectory(dir);
 
+            TryMigrateFromLegacy();
             Load();
         }
 
         public static string GetDefaultFilePath()
         {
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            return Path.Combine(appData, "TaskbarSense", "settings.json");
+        }
+
+        public static string GetLegacyFilePath()
+        {
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             return Path.Combine(appData, "SmartTaskbar.Win11", "settings.json");
+        }
+
+        private void TryMigrateFromLegacy()
+        {
+            try
+            {
+                if (File.Exists(_filePath))
+                    return;
+
+                var legacy = GetLegacyFilePath();
+                if (!File.Exists(legacy))
+                    return;
+
+                var dir = Path.GetDirectoryName(_filePath);
+                if (!string.IsNullOrEmpty(dir))
+                    Directory.CreateDirectory(dir);
+
+                File.Copy(legacy, _filePath, false);
+            }
+            catch
+            {
+                // ignore migration failure
+            }
         }
 
         private void Load()
@@ -44,13 +74,37 @@ namespace SmartTaskbar.Win11.Worker.Services
             try
             {
                 using var document = JsonDocument.Parse(File.ReadAllText(_filePath));
+                if (document.RootElement.ValueKind != JsonValueKind.Object)
+                {
+                    BackupCorruptSettings();
+                    _cache = new Dictionary<string, JsonElement>();
+                    return;
+                }
+
                 _cache = new Dictionary<string, JsonElement>();
                 foreach (var property in document.RootElement.EnumerateObject())
                     _cache[property.Name] = property.Value.Clone();
             }
             catch
             {
+                BackupCorruptSettings();
                 _cache = new Dictionary<string, JsonElement>();
+            }
+        }
+
+        private void BackupCorruptSettings()
+        {
+            try
+            {
+                if (!File.Exists(_filePath))
+                    return;
+
+                var bak = _filePath + $".corrupt-{DateTime.Now:yyyyMMddHHmmss}.bak";
+                File.Copy(_filePath, bak, true);
+            }
+            catch
+            {
+                // ignore
             }
         }
 
@@ -67,7 +121,6 @@ namespace SmartTaskbar.Win11.Worker.Services
                 if (!string.IsNullOrEmpty(dir))
                     Directory.CreateDirectory(dir);
 
-                // Atomic-ish write: temp file then replace, so a crash mid-write won't wipe settings.
                 var tempPath = _filePath + ".tmp";
                 File.WriteAllText(tempPath, json);
                 if (File.Exists(_filePath))
@@ -77,7 +130,6 @@ namespace SmartTaskbar.Win11.Worker.Services
             }
             catch
             {
-                // Keep in-memory cache; do not throw into UI thread on disk errors.
                 try
                 {
                     var tempPath = _filePath + ".tmp";

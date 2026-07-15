@@ -169,5 +169,13 @@ namespace SmartTaskbar.Win11
         public static extern bool GetWindowPlacement(IntPtr hWnd, ref WindowPlacement lpwndpl);
 
         #endregion
+
+        #region GetMonitorInfo
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MonitorInfo lpmi);
+
+        #endregion
     }
 }

@@ -17,6 +17,7 @@ namespace SmartTaskbar.Win11
                     WriteCrashLog("UnhandledException", e.ExceptionObject?.ToString() ?? "Unknown");
             };
 
+            // TaskbarSense single-instance mutex (legacy GUID kept for upgrade continuity)
             using (new Mutex(true, "{a1b2c3d4-e5f6-7890-abcd-ef1234567890}", out var createNew))
             {
                 if (!createNew) return;
@@ -35,7 +36,7 @@ namespace SmartTaskbar.Win11
             {
                 var dir = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "SmartTaskbar.Win11",
+                    "TaskbarSense",
                     "logs");
                 Directory.CreateDirectory(dir);
                 var path = Path.Combine(dir, "crash.log");

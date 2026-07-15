@@ -135,4 +135,7 @@
   <data name="tray_maximizeHide" xml:space="preserve">
     <value>最大化隐藏模式</value>
   </data>
+  <data name="tray_runAtStartup" xml:space="preserve">
+    <value>开机自启</value>
+  </data>
 </root>

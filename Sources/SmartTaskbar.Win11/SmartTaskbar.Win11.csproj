@@ -8,9 +8,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>Resources\Logo-White.ico</ApplicationIcon>
     <Authors>baolongzhanshi</Authors>
-    <Version>2.0.0</Version>
-    <Description>SmartTaskbar for Windows 11 - with maximize-hide mode</Description>
-    <Copyright>Copyright (c) 2018-2026 ChanpleCai; Copyright (c) 2026 baolongzhanshi (Win11 fork)</Copyright>
+    <Product>TaskbarSense</Product>
+    <AssemblyTitle>TaskbarSense</AssemblyTitle>
+    <Version>2.1.0</Version>
+    <Description>TaskbarSense - intelligent taskbar hide for Windows 11 (fork of SmartTaskbar)</Description>
+    <Copyright>Copyright (c) 2018-2026 ChanpleCai; Copyright (c) 2026 baolongzhanshi (TaskbarSense)</Copyright>
     <RootNamespace>SmartTaskbar.Win11</RootNamespace>
     <AssemblyName>SmartTaskbar.Win11</AssemblyName>
     <SupportedOSPlatformVersion>10.0.22000.0</SupportedOSPlatformVersion>

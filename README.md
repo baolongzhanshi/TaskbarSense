@@ -1,119 +1,59 @@
-# SmartTaskbar.Win11
+# TaskbarSense
 
 [![Release](https://img.shields.io/github/v/release/baolongzhanshi/SmartTaskbar.Win11)](https://github.com/baolongzhanshi/SmartTaskbar.Win11/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/baolongzhanshi/SmartTaskbar.Win11/total.svg)](https://github.com/baolongzhanshi/SmartTaskbar.Win11/releases)
 [![License](http://img.shields.io/:license-MIT-blue.svg?style=flat)](LICENSE)
 
-**SmartTaskbar.Win11** 是一个面向 **Windows 11** 的轻量级任务栏自动隐藏工具。
+**TaskbarSense** 是面向 **Windows 11** 的轻量任务栏智能隐藏工具。
 
-> 本项目是 [ChanpleCai/SmartTaskbar](https://github.com/ChanpleCai/SmartTaskbar) 的二次开发版本（MIT 协议），在原版能力基础上增加了 Windows 11 适配与「最大化隐藏」模式。
+> 本项目基于 [ChanpleCai/SmartTaskbar](https://github.com/ChanpleCai/SmartTaskbar)（MIT）二次开发，产品名 **TaskbarSense**，工程目录仍为 `SmartTaskbar.Win11`。
 
-仓库地址：https://github.com/baolongzhanshi/SmartTaskbar.Win11
+仓库：https://github.com/baolongzhanshi/SmartTaskbar.Win11
 
-## 与原版的关系
+## 功能
 
-| 项目 | 说明 |
-|------|------|
-| 原版项目 | [ChanpleCai/SmartTaskbar](https://github.com/ChanpleCai/SmartTaskbar) |
-| 本仓库 | [baolongzhanshi/SmartTaskbar.Win11](https://github.com/baolongzhanshi/SmartTaskbar.Win11) |
-| 主要程序 | `Sources/SmartTaskbar.Win11` |
-| 目标框架 | .NET 8 / Windows 11 |
-| 新增能力 | MaximizeHide（同显示器存在最大化窗口时自动隐藏任务栏） |
-
-原版代码仍保留在仓库中，便于对照；日常使用请安装本仓库发布的 **SmartTaskbar.Win11** 安装包。
-
-## 功能特性
-
-### Auto 模式（继承原版）
-
-- 根据前台窗口与任务栏是否相交，自动切换任务栏显示 / 隐藏
-- 双击托盘图标可快速切换任务栏显示状态
-
-### MaximizeHide 模式（二开新增）
-
-- 检测**同一显示器**上是否存在最大化窗口
-- 有最大化窗口时自动隐藏任务栏
-- 无最大化窗口时恢复显示
-- 适合需要更接近「全屏沉浸」体验的 Windows 11 使用场景
-
-### 其他
-
-- 系统托盘菜单（动画开关、退出时显示任务栏、关于、退出）
-- Windows 11 任务栏居中 / 左对齐检测
-- 多显示器菜单定位改进
-- 配置保存在本地 `%LocalAppData%\SmartTaskbar.Win11\settings.json`
-- 安装包**自包含**，目标电脑无需预装 .NET 8 Desktop Runtime
+- **Auto**：前台窗口与任务栏相交时自动隐藏
+- **MaximizeHide**：同显示器存在最大化 / 无边框全屏窗口时隐藏任务栏
+- 托盘菜单：动画、开机自启、退出后恢复任务栏
+- 托盘 Tooltip 显示当前模式（`TaskbarSense | Auto`）
+- 显示设置变化 / 解锁会话后自动刷新任务栏信息
+- 配置：`%LocalAppData%\TaskbarSense\settings.json`（会从旧路径自动迁移）
 
 ## 安装
 
-1. 打开 [Releases](https://github.com/baolongzhanshi/SmartTaskbar.Win11/releases)
-2. 下载 `SmartTaskbar.Win11_Setup_2.0.0.exe`
-3. 双击安装并启动
+| 安装包 | 体积 | .NET 8 |
+|--------|------|--------|
+| `TaskbarSense_Setup_2.1.0_Framework.exe` | 约 6 MB（推荐） | **需要** [Desktop Runtime x64](https://dotnet.microsoft.com/download/dotnet/8.0) |
+| `TaskbarSense_Setup_2.1.0_SelfContained.exe` | 约 52 MB | **不需要** |
 
-**系统要求：** Windows 11（10.0.22000 及以上）
+从 [Releases](https://github.com/baolongzhanshi/SmartTaskbar.Win11/releases) 下载。系统要求：Windows 11（10.0.22000+）。
 
-安装后程序运行在系统托盘（通知区域）。如果看不到图标，请检查托盘溢出区。
-
-## 使用说明
+## 使用
 
 右键托盘图标：
 
-| 菜单项 | 作用 |
-|--------|------|
-| 关于 | 打开本项目 GitHub 页面 |
-| 动画 | 开关任务栏动画 |
-| 自动模式 | 启用 / 关闭 Auto 模式 |
-| 最大化隐藏模式 | 启用 / 关闭 MaximizeHide 模式 |
-| 退出后显示任务栏 | 退出程序时是否恢复任务栏显示 |
-| 退出 | 退出程序 |
-
-说明：
-
-- Auto 与 MaximizeHide 为互斥模式，同一时间只会启用一种
-- 双击托盘图标会关闭自动模式，并切换任务栏显示状态
+| 菜单 | 说明 |
+|------|------|
+| 智能模式 | Auto（与最大化隐藏互斥） |
+| 最大化隐藏模式 | MaximizeHide |
+| 开机自启 | 写入当前用户 Run 注册表 |
+| 退出后显示任务栏 | 退出时是否 `CancelAutoHide` 恢复普通任务栏 |
+| 双击托盘 | 关闭智能模式并恢复普通任务栏 |
 
 ## 构建
-
-### 环境
-
-- Visual Studio 2022 或 .NET 8 SDK
-- Windows 11 开发环境
-
-### 命令行构建
 
 ```powershell
 dotnet build Sources/SmartTaskbar.Win11/SmartTaskbar.Win11.csproj -c Release
 dotnet test Sources/SmartTaskbar.Win11.Tests/SmartTaskbar.Win11.Tests.csproj
+
+dotnet publish Sources/SmartTaskbar.Win11/SmartTaskbar.Win11.csproj -c Release -r win-x64 --self-contained false -o publish-framework
+dotnet publish Sources/SmartTaskbar.Win11/SmartTaskbar.Win11.csproj -c Release -r win-x64 --self-contained true -o publish-selfcontained
 ```
 
-### 发布安装包（两种）
+Inno Setup：`installer/SmartTaskbar.Win11.iss`
 
-```powershell
-# 小体积（框架依赖）
-dotnet publish Sources/SmartTaskbar.Win11/SmartTaskbar.Win11.csproj `
-  -c Release -r win-x64 --self-contained false `
-  -o publish-framework
+## 致谢与许可
 
-# 大体积（自包含）
-dotnet publish Sources/SmartTaskbar.Win11/SmartTaskbar.Win11.csproj `
-  -c Release -r win-x64 --self-contained true `
-  -o publish-selfcontained
-```
-
-使用 Inno Setup 6 分别编译（见 `installer/SmartTaskbar.Win11.iss` 文件头注释）。
-
-## 已知限制
-
-- 主任务栏不在主显示器时，部分逻辑可能表现异常（继承自原版实现）
-- 某些应用使用特殊最大化逻辑时，任务栏可能不会按预期弹出；可尝试 `Win + T`
-- Auto-Hide 相关行为会受到 Windows 系统本身规则影响
-
-## 致谢
-
-- 原作者与原项目：[ChanpleCai/SmartTaskbar](https://github.com/ChanpleCai/SmartTaskbar)
-- 本仓库在原版基础上完成 Windows 11 适配、MaximizeHide 模式、.NET 8 迁移与安装打包
-
-## 许可证
-
-本项目遵循 [MIT License](LICENSE)。  
-二次开发请保留原作者版权声明，并遵守 MIT 许可要求。
+- 原版：[ChanpleCai/SmartTaskbar](https://github.com/ChanpleCai/SmartTaskbar)
+- 本项目：TaskbarSense / baolongzhanshi
+- [MIT License](LICENSE)

@@ -297,3 +297,13 @@ __pycache__/
 *.btm.cs
 *.odx.cs
 *.xsd.cs
+
+# Local publish / installer artifacts
+publish-framework/
+publish-selfcontained/
+publish/
+SmartTaskbar.Win11-v2.0.0/
+SmartTaskbar.Win11-v2.0.0.zip
+SmartTaskbar.Win11_Setup_*.exe
+TaskbarSense_Setup_*.exe
+.trae/documents/

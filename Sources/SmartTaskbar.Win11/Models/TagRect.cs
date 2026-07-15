@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 
 namespace SmartTaskbar.Win11
 {
@@ -28,7 +28,7 @@ namespace SmartTaskbar.Win11
                && right == other.right
                && bottom == other.bottom;
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
             => obj is TagRect other && Equals(other);
 
         public override int GetHashCode()
@@ -42,5 +42,14 @@ namespace SmartTaskbar.Win11
                 return hashCode;
             }
         }
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MonitorInfo
+    {
+        public uint cbSize;
+        public TagRect rcMonitor;
+        public TagRect rcWork;
+        public uint dwFlags;
     }
 }

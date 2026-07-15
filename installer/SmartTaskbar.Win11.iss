@@ -1,13 +1,13 @@
-; SmartTaskbar.Win11 Installer template
-; Build two variants via command-line defines:
-;   Self-contained (no .NET required, larger):
-;     ISCC.exe /DMyAppSourceDir=...\publish-selfcontained /DMyOutputBase=SmartTaskbar.Win11_Setup_2.0.0_SelfContained /DMyPackageKind=selfcontained installer\SmartTaskbar.Win11.iss
-;   Framework-dependent (small, needs .NET 8 Desktop Runtime):
-;     ISCC.exe /DMyAppSourceDir=...\publish-framework /DMyOutputBase=SmartTaskbar.Win11_Setup_2.0.0_Framework /DMyPackageKind=framework installer\SmartTaskbar.Win11.iss
+; TaskbarSense (SmartTaskbar.Win11 fork) Installer
+; Dual package:
+;   Framework (small):
+;     ISCC /DMyAppSourceDir=...\publish-framework /DMyOutputBase=TaskbarSense_Setup_2.1.0_Framework /DMyPackageKind=framework installer\SmartTaskbar.Win11.iss
+;   SelfContained (large):
+;     ISCC /DMyAppSourceDir=...\publish-selfcontained /DMyOutputBase=TaskbarSense_Setup_2.1.0_SelfContained /DMyPackageKind=selfcontained installer\SmartTaskbar.Win11.iss
 
-#define MyAppName "SmartTaskbar.Win11"
-#define MyAppVersion "2.0.0"
-#define MyAppPublisher "SmartTaskbar.Win11"
+#define MyAppName "TaskbarSense"
+#define MyAppVersion "2.1.0"
+#define MyAppPublisher "baolongzhanshi"
 #define MyAppURL "https://github.com/baolongzhanshi/SmartTaskbar.Win11"
 #define MyAppExeName "SmartTaskbar.Win11.exe"
 #ifndef MyAppSourceDir
@@ -16,14 +16,14 @@
 #define MyAppIcon "d:\Desktop\SmartTaskbar\Sources\SmartTaskbar.Win11\Resources\Logo-White.ico"
 #define MyOutputDir "D:\Downloads"
 #ifndef MyOutputBase
-  #define MyOutputBase "SmartTaskbar.Win11_Setup_2.0.0_SelfContained"
+  #define MyOutputBase "TaskbarSense_Setup_2.1.0_SelfContained"
 #endif
 #ifndef MyPackageKind
   #define MyPackageKind "selfcontained"
 #endif
 
 [Setup]
-AppId={{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}
+AppId={{B2C3D4E5-F6A7-8901-BCDE-F12345678901}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppVerName={#MyAppName} {#MyAppVersion}
@@ -48,9 +48,9 @@ UninstallDisplayIcon={app}\{#MyAppExeName}
 VersionInfoVersion={#MyAppVersion}
 VersionInfoCompany={#MyAppPublisher}
 #if MyPackageKind == "framework"
-VersionInfoDescription=SmartTaskbar.Win11 (Framework-dependent, requires .NET 8 Desktop Runtime)
+VersionInfoDescription=TaskbarSense (Framework-dependent, requires .NET 8 Desktop Runtime)
 #else
-VersionInfoDescription=SmartTaskbar.Win11 (Self-contained, no .NET install required)
+VersionInfoDescription=TaskbarSense (Self-contained, no .NET install required)
 #endif
 VersionInfoProductName={#MyAppName}
 MinVersion=10.0.22000
@@ -78,6 +78,7 @@ Name: "{userstartup}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: st
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
+Type: filesandordirs; Name: "{localappdata}\TaskbarSense"
 Type: filesandordirs; Name: "{localappdata}\SmartTaskbar.Win11"
 
 [Code]
@@ -86,13 +87,11 @@ var
   ResultCode: Integer;
   InstallNet: Integer;
 begin
-  // Stop running instance before install
   Exec('taskkill.exe', '/F /IM SmartTaskbar.Win11.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
 
 #if MyPackageKind == "framework"
-  // Remind users that this small package needs .NET 8 Desktop Runtime
   if MsgBox(
-    '这是【小体积 / 框架依赖】安装包。' + #13#10 + #13#10 +
+    '这是 TaskbarSense【小体积 / 框架依赖】安装包。' + #13#10 + #13#10 +
     '运行前需要已安装：.NET 8 Desktop Runtime (x64)。' + #13#10 +
     '若尚未安装，可打开下载页面获取。' + #13#10 + #13#10 +
     '是 = 继续安装' + #13#10 +

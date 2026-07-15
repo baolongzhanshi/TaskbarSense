@@ -41,7 +41,21 @@ public class MaximizeDetectorTests
         _windowEnum.EnumerateTopLevelWindows().Returns(new[] { Hwnd1 });
         _windowState.IsVisible(Hwnd1).Returns(true);
         _windowState.IsMaximized(Hwnd1).Returns(true);
+        _windowState.IsFullscreen(Hwnd1).Returns(false);
         _windowState.GetClassName(Hwnd1).Returns("Notepad");
+        _monitorService.GetMonitorFromWindow(Hwnd1).Returns(Monitor1);
+        _monitorService.IsSameMonitor(Monitor1, Monitor1).Returns(true);
+        _detector.HasMaximizedWindowOnMonitor(Monitor1).Should().BeTrue();
+    }
+
+    [Fact]
+    public void FullscreenVisibleWindowOnSameMonitor_ReturnsTrue()
+    {
+        _windowEnum.EnumerateTopLevelWindows().Returns(new[] { Hwnd1 });
+        _windowState.IsVisible(Hwnd1).Returns(true);
+        _windowState.IsMaximized(Hwnd1).Returns(false);
+        _windowState.IsFullscreen(Hwnd1).Returns(true);
+        _windowState.GetClassName(Hwnd1).Returns("GameWindow");
         _monitorService.GetMonitorFromWindow(Hwnd1).Returns(Monitor1);
         _monitorService.IsSameMonitor(Monitor1, Monitor1).Returns(true);
         _detector.HasMaximizedWindowOnMonitor(Monitor1).Should().BeTrue();
@@ -53,6 +67,7 @@ public class MaximizeDetectorTests
         _windowEnum.EnumerateTopLevelWindows().Returns(new[] { Hwnd1 });
         _windowState.IsVisible(Hwnd1).Returns(true);
         _windowState.IsMaximized(Hwnd1).Returns(true);
+        _windowState.IsFullscreen(Hwnd1).Returns(false);
         _windowState.GetClassName(Hwnd1).Returns("Notepad");
         _monitorService.GetMonitorFromWindow(Hwnd1).Returns(Monitor2);
         _monitorService.IsSameMonitor(Monitor2, Monitor1).Returns(false);
@@ -74,6 +89,7 @@ public class MaximizeDetectorTests
         _windowEnum.EnumerateTopLevelWindows().Returns(new[] { Hwnd1 });
         _windowState.IsVisible(Hwnd1).Returns(true);
         _windowState.IsMaximized(Hwnd1).Returns(false);
+        _windowState.IsFullscreen(Hwnd1).Returns(false);
         _windowState.GetClassName(Hwnd1).Returns("Notepad");
         _detector.HasMaximizedWindowOnMonitor(Monitor1).Should().BeFalse();
     }
@@ -89,6 +105,7 @@ public class MaximizeDetectorTests
         _windowState.IsMaximized(Hwnd1).Returns(false);
         _windowState.IsMaximized(Hwnd2).Returns(false);
         _windowState.IsMaximized(Hwnd3).Returns(true);
+        _windowState.IsFullscreen(Arg.Any<IntPtr>()).Returns(false);
         _windowState.GetClassName(Arg.Any<IntPtr>()).Returns("Chrome");
         _monitorService.GetMonitorFromWindow(Hwnd3).Returns(Monitor1);
         _monitorService.IsSameMonitor(Monitor1, Monitor1).Returns(true);
@@ -101,6 +118,7 @@ public class MaximizeDetectorTests
         _windowEnum.EnumerateTopLevelWindows().Returns(new[] { Hwnd1 });
         _windowState.IsVisible(Hwnd1).Returns(true);
         _windowState.IsMaximized(Hwnd1).Returns(true);
+        _windowState.IsFullscreen(Hwnd1).Returns(false);
         _windowState.GetClassName(Hwnd1).Returns("Shell_TrayWnd");
         _detector.HasMaximizedWindowOnMonitor(Monitor1).Should().BeFalse();
     }
@@ -111,6 +129,7 @@ public class MaximizeDetectorTests
         _windowEnum.EnumerateTopLevelWindows().Returns(new[] { Hwnd1, Hwnd2 });
         _windowState.IsVisible(Arg.Any<IntPtr>()).Returns(true);
         _windowState.IsMaximized(Arg.Any<IntPtr>()).Returns(true);
+        _windowState.IsFullscreen(Arg.Any<IntPtr>()).Returns(false);
         _windowState.GetClassName(Hwnd1).Returns("Progman");
         _windowState.GetClassName(Hwnd2).Returns("WorkerW");
         _detector.HasMaximizedWindowOnMonitor(Monitor1).Should().BeFalse();

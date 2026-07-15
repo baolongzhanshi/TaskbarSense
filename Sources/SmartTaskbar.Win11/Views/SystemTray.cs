@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using Microsoft.Win32;
+using SmartTaskbar.Win11.Helpers;
 using SmartTaskbar.Win11.Languages;
 using SmartTaskbar.Win11.Models;
 using SmartTaskbar.Win11.Worker.Services;
@@ -10,22 +11,26 @@ namespace SmartTaskbar.Win11
     internal class SystemTray : ApplicationContext
     {
         private const int TrayTolerance = 4;
+        private const string ProductDisplayName = "TaskbarSense";
+
         private readonly ToolStripMenuItem _animationInBar;
         private readonly ToolStripMenuItem _autoMode;
         private readonly ToolStripMenuItem _maximizeHideMode;
+        private readonly ToolStripMenuItem _runAtStartup;
+        private readonly ToolStripMenuItem _showBarOnExit;
+        private readonly ToolStripMenuItem _exit;
 
         private readonly Container _container = new();
         private readonly ContextMenuStrip _contextMenuStrip;
-
         private readonly Engine _engine;
-        private readonly ToolStripMenuItem _exit;
         private readonly NotifyIcon _notifyIcon;
         private readonly ResourceCulture _resourceCulture = new();
-        private readonly ToolStripMenuItem _showBarOnExit;
+        private readonly TaskbarAlignmentHelper _taskbarAlignment;
 
         public SystemTray()
         {
             UserSettings.Instance = new UserSettings(new LocalSettingsStore());
+            _taskbarAlignment = new TaskbarAlignmentHelper(new WindowsRegistryReader());
 
             #region Initialization
 
@@ -33,30 +38,13 @@ namespace SmartTaskbar.Win11
 
             var font = new Font("Segoe UI", 10.5F);
 
-            var about = new ToolStripMenuItem(_resourceCulture.GetString(LangName.About))
-            {
-                Font = font
-            };
-            _animationInBar = new ToolStripMenuItem(_resourceCulture.GetString(LangName.Animation))
-            {
-                Font = font
-            };
-            _showBarOnExit = new ToolStripMenuItem(_resourceCulture.GetString(LangName.ShowBarOnExit))
-            {
-                Font = font
-            };
-            _autoMode = new ToolStripMenuItem(_resourceCulture.GetString(LangName.Auto))
-            {
-                Font = font
-            };
-            _maximizeHideMode = new ToolStripMenuItem(_resourceCulture.GetString(LangName.MaximizeHide))
-            {
-                Font = font
-            };
-            _exit = new ToolStripMenuItem(_resourceCulture.GetString(LangName.Exit))
-            {
-                Font = font
-            };
+            var about = new ToolStripMenuItem(_resourceCulture.GetString(LangName.About)) { Font = font };
+            _animationInBar = new ToolStripMenuItem(_resourceCulture.GetString(LangName.Animation)) { Font = font };
+            _showBarOnExit = new ToolStripMenuItem(_resourceCulture.GetString(LangName.ShowBarOnExit)) { Font = font };
+            _runAtStartup = new ToolStripMenuItem(_resourceCulture.GetString(LangName.RunAtStartup)) { Font = font };
+            _autoMode = new ToolStripMenuItem(_resourceCulture.GetString(LangName.Auto)) { Font = font };
+            _maximizeHideMode = new ToolStripMenuItem(_resourceCulture.GetString(LangName.MaximizeHide)) { Font = font };
+            _exit = new ToolStripMenuItem(_resourceCulture.GetString(LangName.Exit)) { Font = font };
 
             _contextMenuStrip = new ContextMenuStrip(_container)
             {
@@ -71,13 +59,14 @@ namespace SmartTaskbar.Win11
                 _autoMode,
                 _maximizeHideMode,
                 new ToolStripSeparator(),
+                _runAtStartup,
                 _showBarOnExit,
                 _exit
             });
 
             _notifyIcon = new NotifyIcon(_container)
             {
-                Text = Application.ProductName,
+                Text = BuildTooltip(),
                 Icon = Fun.IsLightThemeSafe() ? IconResource.Logo_Black : IconResource.Logo_White,
                 Visible = true
             };
@@ -87,24 +76,19 @@ namespace SmartTaskbar.Win11
             #region Load Event
 
             about.Click += AboutOnClick;
-
             _animationInBar.Click += AnimationInBarOnClick;
-
             _showBarOnExit.Click += ShowBarOnExitOnClick;
-
+            _runAtStartup.Click += RunAtStartupOnClick;
             _autoMode.Click += AutoModeOnClick;
-
             _maximizeHideMode.Click += MaximizeHideModeOnClick;
-
             _exit.Click += ExitOnClick;
-
             _notifyIcon.MouseClick += NotifyIconOnMouseClick;
-
             _notifyIcon.MouseDoubleClick += NotifyIconOnMouseDoubleClick;
-
             SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
 
             #endregion
+
+            UpdateTrayTooltip();
         }
 
         private static void AboutOnClick(object? sender, EventArgs e)
@@ -141,11 +125,9 @@ namespace SmartTaskbar.Win11
         private void NotifyIconOnMouseDoubleClick(object? s, MouseEventArgs e)
         {
             UserSettings.Instance.AutoModeType = AutoModeType.None;
-
+            Fun.CancelAutoHide();
             UpdateModeCheckState();
-
-            Fun.ChangeAutoHide();
-            HideBar();
+            UpdateTrayTooltip();
         }
 
         private void NotifyIconOnMouseClick(object? s, MouseEventArgs e)
@@ -154,10 +136,9 @@ namespace SmartTaskbar.Win11
 
             _animationInBar.Checked = Fun.IsEnableTaskbarAnimation();
             _showBarOnExit.Checked = UserSettings.Instance.ShowTaskbarWhenExit;
+            _runAtStartup.Checked = UserSettings.Instance.RunAtStartup;
             UpdateModeCheckState();
-
             ShowMenu();
-
             Fun.SetForegroundWindow(_contextMenuStrip.Handle);
         }
 
@@ -168,25 +149,39 @@ namespace SmartTaskbar.Win11
             _maximizeHideMode.Checked = currentMode == AutoModeType.MaximizeHide;
         }
 
+        private void UpdateTrayTooltip()
+        {
+            _notifyIcon.Text = BuildTooltip();
+        }
+
+        private static string BuildTooltip()
+        {
+            var mode = UserSettings.GetModeDisplayName(UserSettings.Instance.AutoModeType);
+            var text = $"{ProductDisplayName} | {mode}";
+            return text.Length <= 63 ? text : text[..63];
+        }
+
         private void ShowMenu()
         {
             var taskbar = TaskbarHelper.InitTaskbar();
-
             if (taskbar.Handle == IntPtr.Zero)
                 return;
 
             var taskbarScreen = Screen.FromHandle(taskbar.Handle);
             var screenBounds = taskbarScreen.Bounds;
+            var centered = _taskbarAlignment.IsCentered;
 
             switch (taskbar.Position)
             {
                 case TaskbarPosition.Bottom:
                 {
                     var menuY = taskbar.Rect.top - _contextMenuStrip.Height - TrayTolerance;
-                    var menuX = Cursor.Position.X - TrayTolerance;
+                    var menuX = centered
+                        ? Cursor.Position.X - _contextMenuStrip.Width / 2
+                        : Cursor.Position.X - TrayTolerance;
 
-                    if (menuX + _contextMenuStrip.Width > screenBounds.Right)
-                        menuX = screenBounds.Right - _contextMenuStrip.Width - TrayTolerance;
+                    menuX = Math.Max(screenBounds.Left + TrayTolerance,
+                        Math.Min(menuX, screenBounds.Right - _contextMenuStrip.Width - TrayTolerance));
 
                     _contextMenuStrip.Show(menuX, menuY);
                     break;
@@ -195,10 +190,8 @@ namespace SmartTaskbar.Win11
                 {
                     var menuX = taskbar.Rect.right + TrayTolerance;
                     var menuY = Cursor.Position.Y - TrayTolerance;
-
                     if (menuY + _contextMenuStrip.Height > screenBounds.Bottom)
                         menuY = screenBounds.Bottom - _contextMenuStrip.Height - TrayTolerance;
-
                     _contextMenuStrip.Show(menuX, menuY);
                     break;
                 }
@@ -206,21 +199,19 @@ namespace SmartTaskbar.Win11
                 {
                     var menuX = taskbar.Rect.left - TrayTolerance - _contextMenuStrip.Width;
                     var menuY = Cursor.Position.Y - TrayTolerance;
-
                     if (menuY + _contextMenuStrip.Height > screenBounds.Bottom)
                         menuY = screenBounds.Bottom - _contextMenuStrip.Height - TrayTolerance;
-
                     _contextMenuStrip.Show(menuX, menuY);
                     break;
                 }
                 case TaskbarPosition.Top:
                 {
                     var menuY = taskbar.Rect.bottom + TrayTolerance;
-                    var menuX = Cursor.Position.X - TrayTolerance;
-
-                    if (menuX + _contextMenuStrip.Width > screenBounds.Right)
-                        menuX = screenBounds.Right - _contextMenuStrip.Width - TrayTolerance;
-
+                    var menuX = centered
+                        ? Cursor.Position.X - _contextMenuStrip.Width / 2
+                        : Cursor.Position.X - TrayTolerance;
+                    menuX = Math.Max(screenBounds.Left + TrayTolerance,
+                        Math.Min(menuX, screenBounds.Right - _contextMenuStrip.Width - TrayTolerance));
                     _contextMenuStrip.Show(menuX, menuY);
                     break;
                 }
@@ -233,7 +224,6 @@ namespace SmartTaskbar.Win11
                 return;
 
             var taskbar = TaskbarHelper.InitTaskbar();
-
             if (taskbar.Handle != IntPtr.Zero)
                 taskbar.HideTaskbar();
         }
@@ -242,6 +232,7 @@ namespace SmartTaskbar.Win11
         {
             SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
 
+            // Exit policy: default restores normal taskbar; uncheck keeps auto-hide as-is.
             if (UserSettings.Instance.ShowTaskbarWhenExit)
                 Fun.CancelAutoHide();
             else
@@ -255,36 +246,44 @@ namespace SmartTaskbar.Win11
         private void ShowBarOnExitOnClick(object? s, EventArgs e)
             => UserSettings.Instance.ShowTaskbarWhenExit = !_showBarOnExit.Checked;
 
+        private void RunAtStartupOnClick(object? s, EventArgs e)
+        {
+            UserSettings.Instance.RunAtStartup = !_runAtStartup.Checked;
+            _runAtStartup.Checked = UserSettings.Instance.RunAtStartup;
+        }
+
         private void AutoModeOnClick(object? s, EventArgs e)
         {
             if (_autoMode.Checked)
             {
-                // Turning smart mode off: restore a normal (non-auto-hide) taskbar.
                 UserSettings.Instance.AutoModeType = AutoModeType.None;
                 Fun.CancelAutoHide();
             }
             else
             {
                 UserSettings.Instance.AutoModeType = AutoModeType.Auto;
+                Engine.RequestRefresh();
             }
 
             UpdateModeCheckState();
+            UpdateTrayTooltip();
         }
 
         private void MaximizeHideModeOnClick(object? s, EventArgs e)
         {
             if (_maximizeHideMode.Checked)
             {
-                // Turning smart mode off: restore a normal (non-auto-hide) taskbar.
                 UserSettings.Instance.AutoModeType = AutoModeType.None;
                 Fun.CancelAutoHide();
             }
             else
             {
                 UserSettings.Instance.AutoModeType = AutoModeType.MaximizeHide;
+                Engine.RequestRefresh();
             }
 
             UpdateModeCheckState();
+            UpdateTrayTooltip();
         }
 
         private void AnimationInBarOnClick(object? s, EventArgs e)

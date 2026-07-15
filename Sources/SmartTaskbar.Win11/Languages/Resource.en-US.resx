@@ -135,4 +135,7 @@
   <data name="tray_maximizeHide" xml:space="preserve">
     <value>Maximize Hide Mode</value>
   </data>
+  <data name="tray_runAtStartup" xml:space="preserve">
+    <value>Run at startup</value>
+  </data>
 </root>

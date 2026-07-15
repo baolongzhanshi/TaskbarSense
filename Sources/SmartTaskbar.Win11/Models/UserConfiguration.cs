@@ -13,8 +13,13 @@ namespace SmartTaskbar.Win11
         public AutoModeType AutoModeType { get; set; }
 
         /// <summary>
-        ///     Show taskbar when exiting
+        ///     Show / restore taskbar when exiting
         /// </summary>
         public bool ShowTaskbarWhenExit { get; set; }
+
+        /// <summary>
+        ///     Launch at Windows logon
+        /// </summary>
+        public bool RunAtStartup { get; set; }
     }
 }

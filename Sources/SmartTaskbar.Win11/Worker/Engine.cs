@@ -1,14 +1,16 @@
 using System.ComponentModel;
+using SmartTaskbar.Win11.Abstractions;
 using SmartTaskbar.Win11.Worker;
 using SmartTaskbar.Win11.Worker.Services;
 using SmartTaskbar.Win11.Models;
+using Microsoft.Win32;
 using Timer = System.Windows.Forms.Timer;
 
 namespace SmartTaskbar.Win11
 {
     internal sealed class Engine
     {
-        private static Timer _timer;
+        private static Timer _timer = null!;
 
         private static int _timerCount;
         private static TaskbarInfo _taskbar;
@@ -20,7 +22,9 @@ namespace SmartTaskbar.Win11
         private static readonly Stack<IntPtr> LastHideForegroundHandle = new();
         private static ForegroundWindowInfo _currentForegroundWindow;
 
-        private static MaximizeDetector _maximizeDetector;
+        private static MaximizeDetector _maximizeDetector = null!;
+        private static ITaskbarControlService _taskbarControl = null!;
+        private static bool _displayHooksRegistered;
 
         public Engine(Container container)
         {
@@ -35,6 +39,51 @@ namespace SmartTaskbar.Win11
                 new WindowEnumerationService(),
                 new WindowStateService(),
                 new MonitorService());
+
+            _taskbarControl = new TaskbarControlService();
+            RegisterDisplayHooks();
+        }
+
+        public static void RequestRefresh()
+        {
+            ClearCaches();
+            _taskbar = TaskbarHelper.InitTaskbar();
+        }
+
+        private static void RegisterDisplayHooks()
+        {
+            if (_displayHooksRegistered)
+                return;
+
+            try
+            {
+                SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
+                SystemEvents.SessionSwitch += OnSessionSwitch;
+                _displayHooksRegistered = true;
+            }
+            catch
+            {
+                // SystemEvents may fail in some sessions
+            }
+        }
+
+        private static void OnDisplaySettingsChanged(object? sender, EventArgs e)
+            => RequestRefresh();
+
+        private static void OnSessionSwitch(object? sender, SessionSwitchEventArgs e)
+        {
+            if (e.Reason is SessionSwitchReason.SessionUnlock or SessionSwitchReason.ConsoleConnect)
+                RequestRefresh();
+        }
+
+        private static void ClearCaches()
+        {
+            DesktopHandleSet.Clear();
+            NonMouseOverShowHandleSet.Clear();
+            NonDesktopShowHandleSet.Clear();
+            NonForegroundShowHandleSet.Clear();
+            LastHideForegroundHandle.Clear();
+            _currentForegroundWindow = default;
         }
 
         private static void Timer_Tick(object? sender, EventArgs e)
@@ -46,16 +95,14 @@ namespace SmartTaskbar.Win11
 
             if (_timerCount % 5 == 0)
             {
-                Fun.SetAutoHide();
+                _taskbarControl.SetAutoHide();
                 _taskbar = TaskbarHelper.InitTaskbar();
             }
             else if (_taskbar.Handle == IntPtr.Zero)
             {
-                // Explorer / taskbar may have restarted; refresh immediately.
                 _taskbar = TaskbarHelper.InitTaskbar();
             }
 
-            // Never drive show/hide with an invalid taskbar handle.
             if (_taskbar.Handle != IntPtr.Zero)
             {
                 switch (mode)
@@ -74,18 +121,11 @@ namespace SmartTaskbar.Win11
             if (_timerCount <= 7200) return;
 
             _timerCount = 0;
-
-            DesktopHandleSet.Clear();
-            NonMouseOverShowHandleSet.Clear();
-            NonDesktopShowHandleSet.Clear();
-            NonForegroundShowHandleSet.Clear();
-            LastHideForegroundHandle.Clear();
+            ClearCaches();
         }
 
         #region MaximizeHide Mode
 
-        // Scan maximized windows every 3 ticks (~375ms) to reduce EnumWindows cost.
-        // Mouse-over still runs every tick for responsive show-on-hover.
         private const int MaximizeScanIntervalTicks = 3;
 
         private static void HandleMaximizeHideMode()
@@ -95,7 +135,7 @@ namespace SmartTaskbar.Win11
                 case TaskbarBehavior.DoNothing:
                     return;
                 case TaskbarBehavior.Show:
-                    _taskbar.ShowTaskar();
+                    _taskbarControl.ShowTaskbar(in _taskbar);
                     return;
                 case TaskbarBehavior.Pending:
                     break;
@@ -105,9 +145,9 @@ namespace SmartTaskbar.Win11
                 return;
 
             if (_maximizeDetector.HasMaximizedWindowOnMonitor(_taskbar.Monitor))
-                _taskbar.HideTaskbar();
+                _taskbarControl.HideTaskbar(in _taskbar);
             else
-                _taskbar.ShowTaskar();
+                _taskbarControl.ShowTaskbar(in _taskbar);
         }
 
         #endregion
@@ -124,7 +164,7 @@ namespace SmartTaskbar.Win11
                     CheckCurrentWindow();
                     break;
                 case TaskbarBehavior.Show:
-                    _taskbar.ShowTaskar();
+                    _taskbarControl.ShowTaskbar(in _taskbar);
                     break;
             }
         }
@@ -142,10 +182,7 @@ namespace SmartTaskbar.Win11
                     break;
                 case TaskbarBehavior.Pending:
                     if (_taskbar.CheckIfDesktopShow(DesktopHandleSet, NonDesktopShowHandleSet))
-                    {
                         BeforeShowBar();
-                    }
-
                     break;
                 case TaskbarBehavior.Show:
                     BeforeShowBar();
@@ -157,7 +194,7 @@ namespace SmartTaskbar.Win11
                         && info.Rect.AreaCompare())
                         LastHideForegroundHandle.Push(info.Handle);
 
-                    _taskbar.HideTaskbar();
+                    _taskbarControl.HideTaskbar(in _taskbar);
                     break;
             }
 
@@ -174,7 +211,7 @@ namespace SmartTaskbar.Win11
                 LastHideForegroundHandle.Pop();
             }
 
-            _taskbar.ShowTaskar();
+            _taskbarControl.ShowTaskbar(in _taskbar);
         }
 
         #endregion
