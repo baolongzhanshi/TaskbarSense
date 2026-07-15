@@ -11,6 +11,9 @@ namespace SmartTaskbar.Win11.Worker
         private IntPtr _cachedMaximizedHandle;
         private IntPtr _cachedMonitor;
 
+        // Cap expensive fullscreen geometry checks during full enumeration.
+        private const int MaxFullscreenChecksPerScan = 8;
+
         private static readonly HashSet<string> ExcludedClassNames = new(StringComparer.Ordinal)
         {
             "Shell_TrayWnd",
@@ -34,10 +37,10 @@ namespace SmartTaskbar.Win11.Worker
 
         public bool HasMaximizedWindowOnMonitor(IntPtr targetMonitor)
         {
-            // Fast path: re-validate previous hit first.
+            // 1) Re-validate previous hit (allows maximize + fullscreen).
             if (_cachedMaximizedHandle != IntPtr.Zero
                 && _monitorService.IsSameMonitor(_cachedMonitor, targetMonitor)
-                && IsCandidate(_cachedMaximizedHandle, targetMonitor))
+                && IsCandidate(_cachedMaximizedHandle, targetMonitor, allowFullscreen: true))
             {
                 return true;
             }
@@ -45,11 +48,49 @@ namespace SmartTaskbar.Win11.Worker
             _cachedMaximizedHandle = IntPtr.Zero;
             _cachedMonitor = IntPtr.Zero;
 
+            // 2) Foreground window first — most games/videos are foreground when fullscreen.
+            try
+            {
+                var foreground = Fun.GetForegroundWindow();
+                if (foreground != IntPtr.Zero
+                    && IsCandidate(foreground, targetMonitor, allowFullscreen: true))
+                {
+                    _cachedMaximizedHandle = foreground;
+                    _cachedMonitor = targetMonitor;
+                    return true;
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+
+            // 3) Full scan: prefer cheap IsMaximized; limit fullscreen geometry probes.
             var handles = _windowEnumeration.EnumerateTopLevelWindows();
+            var fullscreenChecks = 0;
 
             foreach (var handle in handles)
             {
-                if (!IsCandidate(handle, targetMonitor))
+                if (!_windowState.IsVisible(handle))
+                    continue;
+
+                var isMax = _windowState.IsMaximized(handle);
+                var isFull = false;
+                if (!isMax && fullscreenChecks < MaxFullscreenChecksPerScan)
+                {
+                    fullscreenChecks++;
+                    isFull = _windowState.IsFullscreen(handle);
+                }
+
+                if (!isMax && !isFull)
+                    continue;
+
+                var className = _windowState.GetClassName(handle);
+                if (ExcludedClassNames.Contains(className))
+                    continue;
+
+                var windowMonitor = _monitorService.GetMonitorFromWindow(handle);
+                if (!_monitorService.IsSameMonitor(windowMonitor, targetMonitor))
                     continue;
 
                 _cachedMaximizedHandle = handle;
@@ -60,20 +101,19 @@ namespace SmartTaskbar.Win11.Worker
             return false;
         }
 
-        private bool IsCandidate(IntPtr handle, IntPtr targetMonitor)
+        private bool IsCandidate(IntPtr handle, IntPtr targetMonitor, bool allowFullscreen)
         {
             if (!_windowState.IsVisible(handle))
                 return false;
 
-            // Cheaper check before class name string work.
-            if (!_windowState.IsMaximized(handle) && !_windowState.IsFullscreen(handle))
+            var isMax = _windowState.IsMaximized(handle);
+            if (!isMax && !(allowFullscreen && _windowState.IsFullscreen(handle)))
                 return false;
 
             var className = _windowState.GetClassName(handle);
             if (ExcludedClassNames.Contains(className))
                 return false;
 
-            // ApplicationFrameWindow can host UWP; keep only if truly maximized/fullscreen (already checked).
             var windowMonitor = _monitorService.GetMonitorFromWindow(handle);
             return _monitorService.IsSameMonitor(windowMonitor, targetMonitor);
         }

@@ -31,6 +31,7 @@ namespace SmartTaskbar.Win11
         private readonly Timer _rightClickMenuTimer;
 
         private bool _suppressNextRightClickMenu;
+        private bool _shownModeHint;
 
         public SystemTray()
         {
@@ -310,7 +311,8 @@ namespace SmartTaskbar.Win11
             else
             {
                 UserSettings.Instance.AutoModeType = AutoModeType.Auto;
-                Engine.RequestRefresh();
+                Engine.RequestRefresh(ensureAutoHide: true);
+                ShowModeEnabledHint();
             }
 
             UpdateModeCheckState();
@@ -327,11 +329,38 @@ namespace SmartTaskbar.Win11
             else
             {
                 UserSettings.Instance.AutoModeType = AutoModeType.MaximizeHide;
-                Engine.RequestRefresh();
+                Engine.RequestRefresh(ensureAutoHide: true);
+                ShowModeEnabledHint();
             }
 
             UpdateModeCheckState();
             UpdateTrayTooltip();
+        }
+
+        private void ShowModeEnabledHint()
+        {
+            if (_shownModeHint)
+                return;
+
+            _shownModeHint = true;
+            try
+            {
+                var title = _resourceCulture.GetString(LangName.ModeHintTitle);
+                var text = _resourceCulture.GetString(LangName.ModeHintText);
+                if (string.IsNullOrWhiteSpace(title))
+                    title = ProductDisplayName;
+                if (string.IsNullOrWhiteSpace(text))
+                    return;
+
+                _notifyIcon.BalloonTipTitle = title;
+                _notifyIcon.BalloonTipText = text;
+                _notifyIcon.BalloonTipIcon = ToolTipIcon.Info;
+                _notifyIcon.ShowBalloonTip(4000);
+            }
+            catch
+            {
+                // balloon may be disabled by system policy
+            }
         }
 
         private void AnimationInBarOnClick(object? s, EventArgs e)

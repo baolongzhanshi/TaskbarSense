@@ -1,12 +1,12 @@
 ; TaskbarSense Installer
 ; Dual package:
 ;   Framework:
-;     ISCC /DMyAppSourceDir=...\publish-framework /DMyOutputBase=TaskbarSense_Setup_2.1.1_Framework /DMyPackageKind=framework installer\SmartTaskbar.Win11.iss
+;     ISCC /DMyAppSourceDir=...\publish-framework /DMyOutputBase=TaskbarSense_Setup_2.1.2_Framework /DMyPackageKind=framework installer\SmartTaskbar.Win11.iss
 ;   SelfContained:
-;     ISCC /DMyAppSourceDir=...\publish-selfcontained /DMyOutputBase=TaskbarSense_Setup_2.1.1_SelfContained /DMyPackageKind=selfcontained installer\SmartTaskbar.Win11.iss
+;     ISCC /DMyAppSourceDir=...\publish-selfcontained /DMyOutputBase=TaskbarSense_Setup_2.1.2_SelfContained /DMyPackageKind=selfcontained installer\SmartTaskbar.Win11.iss
 
 #define MyAppName "TaskbarSense"
-#define MyAppVersion "2.1.1"
+#define MyAppVersion "2.1.2"
 #define MyAppPublisher "baolongzhanshi"
 #define MyAppURL "https://github.com/baolongzhanshi/TaskbarSense"
 #define MyAppExeName "TaskbarSense.exe"

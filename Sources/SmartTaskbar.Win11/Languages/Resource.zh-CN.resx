@@ -141,4 +141,10 @@
   <data name="tray_modeOff" xml:space="preserve">
     <value>已关闭</value>
   </data>
+  <data name="tray_modeHintTitle" xml:space="preserve">
+    <value>TaskbarSense</value>
+  </data>
+  <data name="tray_modeHintText" xml:space="preserve">
+    <value>已启用智能隐藏。系统任务栏将切换为“自动隐藏”；关闭模式后会恢复普通任务栏。</value>
+  </data>
 </root>

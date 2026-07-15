@@ -141,4 +141,10 @@
   <data name="tray_modeOff" xml:space="preserve">
     <value>Off</value>
   </data>
+  <data name="tray_modeHintTitle" xml:space="preserve">
+    <value>TaskbarSense</value>
+  </data>
+  <data name="tray_modeHintText" xml:space="preserve">
+    <value>Smart hide enabled. The system taskbar will switch to auto-hide; turning the mode off restores a normal taskbar.</value>
+  </data>
 </root>

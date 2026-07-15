@@ -23,8 +23,8 @@
 
 | 安装包 | 体积 | .NET 8 |
 |--------|------|--------|
-| `TaskbarSense_Setup_2.1.1_Framework.exe` | 约 6 MB（推荐） | **需要** [Desktop Runtime x64](https://dotnet.microsoft.com/download/dotnet/8.0) |
-| `TaskbarSense_Setup_2.1.1_SelfContained.exe` | 约 52 MB | **不需要** |
+| `TaskbarSense_Setup_2.1.2_Framework.exe` | 约 6 MB（推荐） | **需要** [Desktop Runtime x64](https://dotnet.microsoft.com/download/dotnet/8.0) |
+| `TaskbarSense_Setup_2.1.2_SelfContained.exe` | 约 52 MB | **不需要** |
 
 从 [Releases](https://github.com/baolongzhanshi/TaskbarSense/releases) 下载。系统要求：Windows 11（10.0.22000+）。
 

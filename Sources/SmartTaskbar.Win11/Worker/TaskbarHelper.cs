@@ -364,7 +364,8 @@ namespace SmartTaskbar.Win11
             if (!GetWindowRect(rootWindow, out var rect))
                 return true;
 
-            if (!rect.AreaCompare())
+            // Compare against the taskbar's screen, not necessarily the primary display.
+            if (!rect.AreaCompare(taskbar.Handle))
                 return true;
 
             if (nonDesktopShowHandleSet.Contains(rootWindow))
@@ -405,9 +406,10 @@ namespace SmartTaskbar.Win11
             }
         }
 
-        public static bool AreaCompare(this in TagRect rect)
+        /// <param name="referenceHwnd">Prefer the taskbar (or any window) on the target screen.</param>
+        public static bool AreaCompare(this in TagRect rect, IntPtr referenceHwnd)
         {
-            var bounds = GetSafeScreenBounds(IntPtr.Zero);
+            var bounds = GetSafeScreenBounds(referenceHwnd);
             return 3 * (rect.bottom - rect.top) * (rect.right - rect.left)
                    > bounds.Width * bounds.Height;
         }

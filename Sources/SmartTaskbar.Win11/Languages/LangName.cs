@@ -10,5 +10,7 @@ namespace SmartTaskbar.Win11.Languages
         public const string MaximizeHide = "tray_maximizeHide";
         public const string RunAtStartup = "tray_runAtStartup";
         public const string ModeOff = "tray_modeOff";
+        public const string ModeHintTitle = "tray_modeHintTitle";
+        public const string ModeHintText = "tray_modeHintText";
     }
 }

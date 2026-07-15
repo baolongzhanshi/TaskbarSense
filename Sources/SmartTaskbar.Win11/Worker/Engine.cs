@@ -49,11 +49,21 @@ namespace SmartTaskbar.Win11
             RegisterDisplayHooks();
         }
 
-        public static void RequestRefresh()
+        /// <param name="ensureAutoHide">
+        ///     When true (e.g. user just enabled a smart mode), force system auto-hide immediately
+        ///     instead of waiting for the next periodic tick.
+        /// </param>
+        public static void RequestRefresh(bool ensureAutoHide = false)
         {
             void DoRefresh()
             {
                 ClearCaches();
+                if (ensureAutoHide
+                    || UserSettings.Instance.AutoModeType != AutoModeType.None)
+                {
+                    _taskbarControl?.SetAutoHide();
+                }
+
                 _taskbar = TaskbarHelper.InitTaskbar();
             }
 
@@ -226,7 +236,7 @@ namespace SmartTaskbar.Win11
                     if (info == _currentForegroundWindow) return;
 
                     if (!LastHideForegroundHandle.Contains(info.Handle)
-                        && info.Rect.AreaCompare())
+                        && info.Rect.AreaCompare(_taskbar.Handle))
                         LastHideForegroundHandle.Push(info.Handle);
 
                     _taskbarControl.HideTaskbar(in _taskbar);
