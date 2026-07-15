@@ -56,12 +56,39 @@ namespace SmartTaskbar.Win11.Worker.Services
 
         private void Save()
         {
-            var dict = new Dictionary<string, object?>();
-            foreach (var pair in _cache)
-                dict[pair.Key] = JsonSerializer.Deserialize<object>(pair.Value.GetRawText());
+            try
+            {
+                var dict = new Dictionary<string, object?>();
+                foreach (var pair in _cache)
+                    dict[pair.Key] = JsonSerializer.Deserialize<object>(pair.Value.GetRawText());
 
-            var json = JsonSerializer.Serialize(dict, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(_filePath, json);
+                var json = JsonSerializer.Serialize(dict, new JsonSerializerOptions { WriteIndented = true });
+                var dir = Path.GetDirectoryName(_filePath);
+                if (!string.IsNullOrEmpty(dir))
+                    Directory.CreateDirectory(dir);
+
+                // Atomic-ish write: temp file then replace, so a crash mid-write won't wipe settings.
+                var tempPath = _filePath + ".tmp";
+                File.WriteAllText(tempPath, json);
+                if (File.Exists(_filePath))
+                    File.Replace(tempPath, _filePath, null);
+                else
+                    File.Move(tempPath, _filePath);
+            }
+            catch
+            {
+                // Keep in-memory cache; do not throw into UI thread on disk errors.
+                try
+                {
+                    var tempPath = _filePath + ".tmp";
+                    if (File.Exists(tempPath))
+                        File.Delete(tempPath);
+                }
+                catch
+                {
+                    // ignore cleanup failure
+                }
+            }
         }
 
         public T? GetValue<T>(string key)

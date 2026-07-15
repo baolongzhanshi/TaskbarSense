@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Diagnostics;
 using SmartTaskbar.Win11.Worker;
 using SmartTaskbar.Win11.Worker.Services;
 using SmartTaskbar.Win11.Models;
@@ -48,21 +47,26 @@ namespace SmartTaskbar.Win11
             if (_timerCount % 5 == 0)
             {
                 Fun.SetAutoHide();
-
                 _taskbar = TaskbarHelper.InitTaskbar();
-
-                if (_taskbar.Handle == IntPtr.Zero)
-                    return;
+            }
+            else if (_taskbar.Handle == IntPtr.Zero)
+            {
+                // Explorer / taskbar may have restarted; refresh immediately.
+                _taskbar = TaskbarHelper.InitTaskbar();
             }
 
-            switch (mode)
+            // Never drive show/hide with an invalid taskbar handle.
+            if (_taskbar.Handle != IntPtr.Zero)
             {
-                case AutoModeType.Auto:
-                    HandleAutoMode();
-                    break;
-                case AutoModeType.MaximizeHide:
-                    HandleMaximizeHideMode();
-                    break;
+                switch (mode)
+                {
+                    case AutoModeType.Auto:
+                        HandleAutoMode();
+                        break;
+                    case AutoModeType.MaximizeHide:
+                        HandleMaximizeHideMode();
+                        break;
+                }
             }
 
             ++_timerCount;
@@ -75,6 +79,7 @@ namespace SmartTaskbar.Win11
             NonMouseOverShowHandleSet.Clear();
             NonDesktopShowHandleSet.Clear();
             NonForegroundShowHandleSet.Clear();
+            LastHideForegroundHandle.Clear();
         }
 
         #region MaximizeHide Mode

@@ -133,6 +133,9 @@ namespace SmartTaskbar.Win11
         /// <param name="taskbar"></param>
         public static void HideTaskbar(this in TaskbarInfo taskbar)
         {
+            if (taskbar.Handle == IntPtr.Zero)
+                return;
+
             if (taskbar.IsShow)
                 // Send a message to hide the taskbar, if taskbar is display
                 _ = PostMessage(taskbar.Handle,
@@ -147,6 +150,9 @@ namespace SmartTaskbar.Win11
         /// <param name="taskbar"></param>
         public static void ShowTaskar(this in TaskbarInfo taskbar)
         {
+            if (taskbar.Handle == IntPtr.Zero)
+                return;
+
             // Send a message to show the taskbar, if taskbar is hidden
             if (!taskbar.IsShow)
                 _ = PostMessage(

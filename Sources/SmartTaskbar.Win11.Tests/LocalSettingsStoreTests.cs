@@ -58,4 +58,14 @@ public class LocalSettingsStoreTests : IDisposable
         store.GetValue<string>("MissingKey").Should().BeNull();
         store.GetValue<bool?>("MissingBool").Should().BeNull();
     }
+
+    [Fact]
+    public void SetValue_DoesNotLeaveTempFile()
+    {
+        var store = new LocalSettingsStore(_settingsPath);
+        store.SetValue("ShowTaskbarWhenExit", true);
+
+        File.Exists(_settingsPath).Should().BeTrue();
+        File.Exists(_settingsPath + ".tmp").Should().BeFalse();
+    }
 }

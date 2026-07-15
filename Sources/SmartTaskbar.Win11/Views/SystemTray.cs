@@ -259,8 +259,9 @@ namespace SmartTaskbar.Win11
         {
             if (_autoMode.Checked)
             {
+                // Turning smart mode off: restore a normal (non-auto-hide) taskbar.
                 UserSettings.Instance.AutoModeType = AutoModeType.None;
-                HideBar();
+                Fun.CancelAutoHide();
             }
             else
             {
@@ -274,8 +275,9 @@ namespace SmartTaskbar.Win11
         {
             if (_maximizeHideMode.Checked)
             {
+                // Turning smart mode off: restore a normal (non-auto-hide) taskbar.
                 UserSettings.Instance.AutoModeType = AutoModeType.None;
-                HideBar();
+                Fun.CancelAutoHide();
             }
             else
             {
