@@ -1,14 +1,14 @@
 # TaskbarSense
 
-[![Release](https://img.shields.io/github/v/release/baolongzhanshi/SmartTaskbar.Win11)](https://github.com/baolongzhanshi/SmartTaskbar.Win11/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/baolongzhanshi/SmartTaskbar.Win11/total.svg)](https://github.com/baolongzhanshi/SmartTaskbar.Win11/releases)
+[![Release](https://img.shields.io/github/v/release/baolongzhanshi/TaskbarSense)](https://github.com/baolongzhanshi/TaskbarSense/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/baolongzhanshi/TaskbarSense/total.svg)](https://github.com/baolongzhanshi/TaskbarSense/releases)
 [![License](http://img.shields.io/:license-MIT-blue.svg?style=flat)](LICENSE)
 
 **TaskbarSense** 是面向 **Windows 11** 的轻量任务栏智能隐藏工具。
 
-> 本项目基于 [ChanpleCai/SmartTaskbar](https://github.com/ChanpleCai/SmartTaskbar)（MIT）二次开发，产品名 **TaskbarSense**，工程目录仍为 `SmartTaskbar.Win11`。
+> 本项目基于 [ChanpleCai/SmartTaskbar](https://github.com/ChanpleCai/SmartTaskbar)（MIT）二次开发。产品名与仓库为 **TaskbarSense**，工程目录仍为 `Sources/SmartTaskbar.Win11`。
 
-仓库：https://github.com/baolongzhanshi/SmartTaskbar.Win11
+仓库：https://github.com/baolongzhanshi/TaskbarSense
 
 ## 功能
 
@@ -26,7 +26,7 @@
 | `TaskbarSense_Setup_2.1.0_Framework.exe` | 约 6 MB（推荐） | **需要** [Desktop Runtime x64](https://dotnet.microsoft.com/download/dotnet/8.0) |
 | `TaskbarSense_Setup_2.1.0_SelfContained.exe` | 约 52 MB | **不需要** |
 
-从 [Releases](https://github.com/baolongzhanshi/SmartTaskbar.Win11/releases) 下载。系统要求：Windows 11（10.0.22000+）。
+从 [Releases](https://github.com/baolongzhanshi/TaskbarSense/releases) 下载。系统要求：Windows 11（10.0.22000+）。
 
 ## 使用
 

@@ -97,7 +97,7 @@ namespace SmartTaskbar.Win11
             {
                 Process.Start(new ProcessStartInfo
                 {
-                    FileName = "https://github.com/baolongzhanshi/SmartTaskbar.Win11",
+                    FileName = "https://github.com/baolongzhanshi/TaskbarSense",
                     UseShellExecute = true
                 });
             }

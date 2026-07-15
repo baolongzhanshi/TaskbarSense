@@ -8,7 +8,7 @@
 #define MyAppName "TaskbarSense"
 #define MyAppVersion "2.1.0"
 #define MyAppPublisher "baolongzhanshi"
-#define MyAppURL "https://github.com/baolongzhanshi/SmartTaskbar.Win11"
+#define MyAppURL "https://github.com/baolongzhanshi/TaskbarSense"
 #define MyAppExeName "SmartTaskbar.Win11.exe"
 #ifndef MyAppSourceDir
   #define MyAppSourceDir "d:\Desktop\SmartTaskbar\publish-selfcontained"
