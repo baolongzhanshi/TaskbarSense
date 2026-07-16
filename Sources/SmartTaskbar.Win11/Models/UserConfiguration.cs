@@ -7,19 +7,15 @@ namespace SmartTaskbar.Win11
     /// </summary>
     internal struct UserConfiguration
     {
-        /// <summary>
-        ///     Auto mode type
-        /// </summary>
         public AutoModeType AutoModeType { get; set; }
 
-        /// <summary>
-        ///     Show / restore taskbar when exiting
-        /// </summary>
         public bool ShowTaskbarWhenExit { get; set; }
 
-        /// <summary>
-        ///     Launch at Windows logon
-        /// </summary>
         public bool RunAtStartup { get; set; }
+
+        /// <summary>
+        ///     Whether the first-run tray tip was already shown.
+        /// </summary>
+        public bool FirstRunTipShown { get; set; }
     }
 }

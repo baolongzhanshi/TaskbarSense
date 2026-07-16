@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Reflection;
 using Microsoft.Win32;
 using SmartTaskbar.Win11.Helpers;
 using SmartTaskbar.Win11.Languages;
@@ -12,8 +13,11 @@ namespace SmartTaskbar.Win11
     internal class SystemTray : ApplicationContext
     {
         private const int TrayTolerance = 4;
-        private const int RightClickMenuDelayMs = 280;
         private const string ProductDisplayName = "TaskbarSense";
+        private const string RepoUrl = "https://github.com/baolongzhanshi/TaskbarSense";
+
+        // Ignore a right-click that arrives immediately after a double-click.
+        private const int DoubleClickGuardMs = 400;
 
         private readonly ToolStripMenuItem _animationInBar;
         private readonly ToolStripMenuItem _autoMode;
@@ -21,6 +25,7 @@ namespace SmartTaskbar.Win11
         private readonly ToolStripMenuItem _runAtStartup;
         private readonly ToolStripMenuItem _showBarOnExit;
         private readonly ToolStripMenuItem _exit;
+        private readonly ToolStripMenuItem _about;
 
         private readonly Container _container = new();
         private readonly ContextMenuStrip _contextMenuStrip;
@@ -28,9 +33,9 @@ namespace SmartTaskbar.Win11
         private readonly NotifyIcon _notifyIcon;
         private readonly ResourceCulture _resourceCulture = new();
         private readonly TaskbarAlignmentHelper _taskbarAlignment;
-        private readonly Timer _rightClickMenuTimer;
+        private readonly Timer _firstRunTipTimer;
 
-        private bool _suppressNextRightClickMenu;
+        private DateTime _ignoreRightClickUntil = DateTime.MinValue;
         private bool _shownModeHint;
 
         public SystemTray()
@@ -44,7 +49,7 @@ namespace SmartTaskbar.Win11
 
             var font = new Font("Segoe UI", 10.5F);
 
-            var about = new ToolStripMenuItem(_resourceCulture.GetString(LangName.About)) { Font = font };
+            _about = new ToolStripMenuItem(_resourceCulture.GetString(LangName.About)) { Font = font };
             _animationInBar = new ToolStripMenuItem(_resourceCulture.GetString(LangName.Animation)) { Font = font };
             _showBarOnExit = new ToolStripMenuItem(_resourceCulture.GetString(LangName.ShowBarOnExit)) { Font = font };
             _runAtStartup = new ToolStripMenuItem(_resourceCulture.GetString(LangName.RunAtStartup)) { Font = font };
@@ -59,7 +64,7 @@ namespace SmartTaskbar.Win11
 
             _contextMenuStrip.Items.AddRange(new ToolStripItem[]
             {
-                about,
+                _about,
                 _animationInBar,
                 new ToolStripSeparator(),
                 _autoMode,
@@ -77,17 +82,14 @@ namespace SmartTaskbar.Win11
                 Visible = true
             };
 
-            _rightClickMenuTimer = new Timer(_container)
-            {
-                Interval = RightClickMenuDelayMs
-            };
-            _rightClickMenuTimer.Tick += RightClickMenuTimerOnTick;
+            _firstRunTipTimer = new Timer(_container) { Interval = 1200 };
+            _firstRunTipTimer.Tick += FirstRunTipTimerOnTick;
 
             #endregion
 
             #region Load Event
 
-            about.Click += AboutOnClick;
+            _about.Click += AboutOnClick;
             _animationInBar.Click += AnimationInBarOnClick;
             _showBarOnExit.Click += ShowBarOnExitOnClick;
             _runAtStartup.Click += RunAtStartupOnClick;
@@ -101,15 +103,51 @@ namespace SmartTaskbar.Win11
             #endregion
 
             UpdateTrayTooltip();
+
+            if (!UserSettings.Instance.FirstRunTipShown)
+                _firstRunTipTimer.Start();
         }
 
-        private static void AboutOnClick(object? sender, EventArgs e)
+        private void FirstRunTipTimerOnTick(object? sender, EventArgs e)
         {
+            _firstRunTipTimer.Stop();
+            if (UserSettings.Instance.FirstRunTipShown)
+                return;
+
+            ShowBalloon(
+                _resourceCulture.GetString(LangName.FirstRunTitle),
+                _resourceCulture.GetString(LangName.FirstRunText),
+                ToolTipIcon.Info,
+                6000);
+
+            UserSettings.Instance.FirstRunTipShown = true;
+        }
+
+        private void AboutOnClick(object? sender, EventArgs e)
+        {
+            var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "2.2.0";
+            var title = _resourceCulture.GetString(LangName.AboutTitle);
+            var bodyTemplate = _resourceCulture.GetString(LangName.AboutBody);
+            if (string.IsNullOrWhiteSpace(title))
+                title = ProductDisplayName;
+            if (string.IsNullOrWhiteSpace(bodyTemplate))
+                bodyTemplate = "Version {0}";
+
+            var body = string.Format(bodyTemplate, version);
+            var result = MessageBox.Show(
+                body,
+                title,
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Information);
+
+            if (result != DialogResult.Yes)
+                return;
+
             try
             {
                 Process.Start(new ProcessStartInfo
                 {
-                    FileName = "https://github.com/baolongzhanshi/TaskbarSense",
+                    FileName = RepoUrl,
                     UseShellExecute = true
                 });
             }
@@ -136,14 +174,26 @@ namespace SmartTaskbar.Win11
 
         private void NotifyIconOnMouseDoubleClick(object? s, MouseEventArgs e)
         {
-            // Cancel pending single-click menu so double-click does not flash the menu.
-            _rightClickMenuTimer.Stop();
-            _suppressNextRightClickMenu = true;
+            // Suppress a trailing right-click that WinForms may raise around double-click.
+            _ignoreRightClickUntil = DateTime.UtcNow.AddMilliseconds(DoubleClickGuardMs);
 
+            if (_contextMenuStrip.Visible)
+                _contextMenuStrip.Close();
+
+            var wasOn = UserSettings.Instance.AutoModeType != AutoModeType.None;
             UserSettings.Instance.AutoModeType = AutoModeType.None;
             Fun.CancelAutoHide();
             UpdateModeCheckState();
             UpdateTrayTooltip();
+
+            if (wasOn)
+            {
+                ShowBalloon(
+                    _resourceCulture.GetString(LangName.ModeOffTipTitle),
+                    _resourceCulture.GetString(LangName.ModeOffTipText),
+                    ToolTipIcon.Info,
+                    3000);
+            }
         }
 
         private void NotifyIconOnMouseClick(object? s, MouseEventArgs e)
@@ -151,21 +201,15 @@ namespace SmartTaskbar.Win11
             if (e.Button != MouseButtons.Right)
                 return;
 
-            if (_suppressNextRightClickMenu)
-            {
-                _suppressNextRightClickMenu = false;
+            if (DateTime.UtcNow < _ignoreRightClickUntil)
                 return;
-            }
 
-            // Delay menu so a double-click can cancel it.
-            _rightClickMenuTimer.Stop();
-            _rightClickMenuTimer.Start();
+            // Immediate menu — no artificial delay.
+            OpenContextMenu();
         }
 
-        private void RightClickMenuTimerOnTick(object? sender, EventArgs e)
+        private void OpenContextMenu()
         {
-            _rightClickMenuTimer.Stop();
-
             _animationInBar.Checked = Fun.IsEnableTaskbarAnimation();
             _showBarOnExit.Checked = UserSettings.Instance.ShowTaskbarWhenExit;
             _runAtStartup.Checked = UserSettings.Instance.RunAtStartup;
@@ -198,7 +242,15 @@ namespace SmartTaskbar.Win11
             if (string.IsNullOrWhiteSpace(mode))
                 mode = UserSettings.GetModeDisplayName(UserSettings.Instance.AutoModeType);
 
-            var text = $"{ProductDisplayName} | {mode}";
+            var hint = _resourceCulture.GetString(LangName.TooltipHint);
+            if (string.IsNullOrWhiteSpace(hint))
+                hint = "Right-click";
+
+            // NotifyIcon.Text max length is 63.
+            var text = $"{ProductDisplayName} · {mode}";
+            if (text.Length + hint.Length + 3 <= 63)
+                text = $"{text} · {hint}";
+
             return text.Length <= 63 ? text : text[..63];
         }
 
@@ -206,13 +258,16 @@ namespace SmartTaskbar.Win11
         {
             var taskbar = TaskbarHelper.InitTaskbar();
             if (taskbar.Handle == IntPtr.Zero)
+            {
+                // Fallback near cursor if taskbar handle is missing.
+                _contextMenuStrip.Show(Cursor.Position);
                 return;
+            }
 
             var taskbarScreen = Screen.FromHandle(taskbar.Handle);
             var screenBounds = taskbarScreen.Bounds;
             var centered = _taskbarAlignment.IsCentered;
 
-            // Ensure menu size is measured before positioning.
             _contextMenuStrip.PerformLayout();
             var menuSize = _contextMenuStrip.GetPreferredSize(Size.Empty);
             if (menuSize.Width <= 0 || menuSize.Height <= 0)
@@ -277,11 +332,10 @@ namespace SmartTaskbar.Win11
 
         private void ExitOnClick(object? s, EventArgs e)
         {
-            _rightClickMenuTimer.Stop();
+            _firstRunTipTimer.Stop();
             SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
             _engine.Dispose();
 
-            // Exit policy: default restores normal taskbar; uncheck keeps auto-hide as-is.
             if (UserSettings.Instance.ShowTaskbarWhenExit)
                 Fun.CancelAutoHide();
             else
@@ -297,8 +351,27 @@ namespace SmartTaskbar.Win11
 
         private void RunAtStartupOnClick(object? s, EventArgs e)
         {
-            UserSettings.Instance.RunAtStartup = !_runAtStartup.Checked;
+            var enable = !_runAtStartup.Checked;
+            var ok = UserSettings.Instance.TrySetRunAtStartup(enable);
             _runAtStartup.Checked = UserSettings.Instance.RunAtStartup;
+
+            if (!ok)
+            {
+                ShowBalloon(
+                    ProductDisplayName,
+                    _resourceCulture.GetString(LangName.StartupFailed),
+                    ToolTipIcon.Warning,
+                    5000);
+                return;
+            }
+
+            ShowBalloon(
+                ProductDisplayName,
+                enable
+                    ? _resourceCulture.GetString(LangName.StartupOnOk)
+                    : _resourceCulture.GetString(LangName.StartupOffOk),
+                ToolTipIcon.Info,
+                2500);
         }
 
         private void AutoModeOnClick(object? s, EventArgs e)
@@ -307,6 +380,7 @@ namespace SmartTaskbar.Win11
             {
                 UserSettings.Instance.AutoModeType = AutoModeType.None;
                 Fun.CancelAutoHide();
+                ShowModeOffTip();
             }
             else
             {
@@ -325,6 +399,7 @@ namespace SmartTaskbar.Win11
             {
                 UserSettings.Instance.AutoModeType = AutoModeType.None;
                 Fun.CancelAutoHide();
+                ShowModeOffTip();
             }
             else
             {
@@ -337,25 +412,39 @@ namespace SmartTaskbar.Win11
             UpdateTrayTooltip();
         }
 
+        private void ShowModeOffTip()
+        {
+            ShowBalloon(
+                _resourceCulture.GetString(LangName.ModeOffTipTitle),
+                _resourceCulture.GetString(LangName.ModeOffTipText),
+                ToolTipIcon.Info,
+                3000);
+        }
+
         private void ShowModeEnabledHint()
         {
             if (_shownModeHint)
                 return;
 
             _shownModeHint = true;
+            ShowBalloon(
+                _resourceCulture.GetString(LangName.ModeHintTitle),
+                _resourceCulture.GetString(LangName.ModeHintText),
+                ToolTipIcon.Info,
+                5000);
+        }
+
+        private void ShowBalloon(string? title, string? text, ToolTipIcon icon, int timeoutMs)
+        {
             try
             {
-                var title = _resourceCulture.GetString(LangName.ModeHintTitle);
-                var text = _resourceCulture.GetString(LangName.ModeHintText);
-                if (string.IsNullOrWhiteSpace(title))
-                    title = ProductDisplayName;
                 if (string.IsNullOrWhiteSpace(text))
                     return;
 
-                _notifyIcon.BalloonTipTitle = title;
+                _notifyIcon.BalloonTipTitle = string.IsNullOrWhiteSpace(title) ? ProductDisplayName : title;
                 _notifyIcon.BalloonTipText = text;
-                _notifyIcon.BalloonTipIcon = ToolTipIcon.Info;
-                _notifyIcon.ShowBalloonTip(4000);
+                _notifyIcon.BalloonTipIcon = icon;
+                _notifyIcon.ShowBalloonTip(timeoutMs);
             }
             catch
             {

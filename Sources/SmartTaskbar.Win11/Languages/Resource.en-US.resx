@@ -118,22 +118,22 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="tray_about" xml:space="preserve">
-    <value>About</value>
+    <value>About TaskbarSense</value>
   </data>
   <data name="tray_animation" xml:space="preserve">
-    <value>Animations in the taskbar</value>
+    <value>Taskbar icon animations</value>
   </data>
   <data name="tray_auto" xml:space="preserve">
-    <value>Auto Mode</value>
+    <value>Auto-hide near taskbar</value>
   </data>
   <data name="tray_exit" xml:space="preserve">
     <value>Exit</value>
   </data>
   <data name="tray_showBarOnExit" xml:space="preserve">
-    <value>Show the taskbar after exit</value>
+    <value>Restore taskbar on exit</value>
   </data>
   <data name="tray_maximizeHide" xml:space="preserve">
-    <value>Maximize Hide Mode</value>
+    <value>Hide when maximized</value>
   </data>
   <data name="tray_runAtStartup" xml:space="preserve">
     <value>Run at startup</value>
@@ -145,6 +145,46 @@
     <value>TaskbarSense</value>
   </data>
   <data name="tray_modeHintText" xml:space="preserve">
-    <value>Smart hide enabled. The system taskbar will switch to auto-hide; turning the mode off restores a normal taskbar.</value>
+    <value>Enabled. Windows taskbar uses auto-hide. Uncheck the mode or double-click the tray icon to restore a normal taskbar.</value>
+  </data>
+  <data name="tray_firstRunTitle" xml:space="preserve">
+    <value>TaskbarSense is running in the tray</value>
+  </data>
+  <data name="tray_firstRunText" xml:space="preserve">
+    <value>The icon may be hidden under the ^ overflow. Right-click for settings; double-click turns smart hide off.</value>
+  </data>
+  <data name="tray_modeOffTipTitle" xml:space="preserve">
+    <value>Smart hide off</value>
+  </data>
+  <data name="tray_modeOffTipText" xml:space="preserve">
+    <value>The taskbar is restored to normal (not auto-hide).</value>
+  </data>
+  <data name="tray_aboutTitle" xml:space="preserve">
+    <value>About TaskbarSense</value>
+  </data>
+  <data name="tray_aboutBody" xml:space="preserve">
+    <value>Version {0}
+
+A lightweight Windows 11 taskbar auto-hide utility.
+· Auto-hide when windows meet the taskbar
+· Hide when maximized / fullscreen
+· Startup option; restore taskbar on exit
+
+Open the project homepage?</value>
+  </data>
+  <data name="tray_aboutOpenGithub" xml:space="preserve">
+    <value>Open GitHub</value>
+  </data>
+  <data name="tray_startupOnOk" xml:space="preserve">
+    <value>Startup enabled</value>
+  </data>
+  <data name="tray_startupOffOk" xml:space="preserve">
+    <value>Startup disabled</value>
+  </data>
+  <data name="tray_startupFailed" xml:space="preserve">
+    <value>Could not change startup. Check permissions or Settings → Apps → Startup.</value>
+  </data>
+  <data name="tray_tooltipHint" xml:space="preserve">
+    <value>Right-click</value>
   </data>
 </root>

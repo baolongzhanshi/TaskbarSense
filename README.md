@@ -4,45 +4,53 @@
 [![Downloads](https://img.shields.io/github/downloads/baolongzhanshi/TaskbarSense/total.svg)](https://github.com/baolongzhanshi/TaskbarSense/releases)
 [![License](http://img.shields.io/:license-MIT-blue.svg?style=flat)](LICENSE)
 
-**TaskbarSense** 是面向 **Windows 11** 的轻量任务栏智能隐藏工具。
+**TaskbarSense** — Windows 11 任务栏智能隐藏小工具（托盘运行）。
 
-> 本项目基于 [ChanpleCai/SmartTaskbar](https://github.com/ChanpleCai/SmartTaskbar)（MIT）二次开发。仓库与产品名：**TaskbarSense**；工程目录仍为 `Sources/SmartTaskbar.Win11`，主程序为 **`TaskbarSense.exe`**。
+> 基于 [ChanpleCai/SmartTaskbar](https://github.com/ChanpleCai/SmartTaskbar)（MIT）二次开发。
 
-仓库：https://github.com/baolongzhanshi/TaskbarSense
+**仓库：** https://github.com/baolongzhanshi/TaskbarSense
 
-## 功能
+---
 
-- **Auto**：前台窗口与任务栏相交时自动隐藏
-- **MaximizeHide**：同显示器存在最大化 / 无边框全屏窗口时隐藏任务栏
-- 托盘菜单：动画、开机自启、退出后恢复任务栏
-- 托盘 Tooltip 本地化显示当前模式
-- 显示设置变化 / 解锁会话后自动刷新（UI 线程安全）
-- 配置：`%LocalAppData%\TaskbarSense\settings.json`（会从旧路径自动迁移）
+## 下载（不会选就看这里）
 
-## 安装
+| 你的情况 | 下这个 |
+|----------|--------|
+| **大多数人 / 懒得装运行时** | **`TaskbarSense_Setup_2.2.0_SelfContained.exe`**（约 50MB+，推荐） |
+| 已安装 .NET 8 桌面运行时，想要小包 | `TaskbarSense_Setup_2.2.0_Framework.exe`（约数 MB） |
 
-| 安装包 | 体积 | .NET 8 |
-|--------|------|--------|
-| `TaskbarSense_Setup_2.1.4_Framework.exe` | 约 6 MB（推荐） | **需要** [Desktop Runtime x64](https://dotnet.microsoft.com/download/dotnet/8.0) |
-| `TaskbarSense_Setup_2.1.4_SelfContained.exe` | 约 52 MB | **不需要** |
+- 系统：Windows 11（10.0.22000+）  
+- 安装后：**没有主窗口**，请到右下角托盘（可能在 `^` 里）找图标  
+- 卸载：开始菜单 → TaskbarSense → 卸载，或「设置 → 应用」  
 
-从 [Releases](https://github.com/baolongzhanshi/TaskbarSense/releases) 下载。系统要求：Windows 11（10.0.22000+）。
+[打开 Releases 下载](https://github.com/baolongzhanshi/TaskbarSense/releases)
 
-> 开机自启请在托盘菜单中开启（安装器不再单独创建启动项，避免重复启动）。
+---
 
-## 使用
+## 怎么用
 
-右键托盘图标：
+1. 安装并运行后，右下角出现托盘图标（首次会气泡提示）  
+2. **右键图标**打开菜单：  
+   - **靠近任务栏时自动隐藏**  
+   - **窗口最大化时隐藏任务栏**  
+   - **开机自动启动**  
+   - **退出软件时恢复任务栏**  
+3. **双击托盘图标** = 关闭智能隐藏并恢复普通任务栏  
 
-| 菜单 | 说明 |
-|------|------|
-| 智能模式 | Auto（与最大化隐藏互斥） |
-| 最大化隐藏模式 | MaximizeHide |
-| 开机自启 | 写入当前用户 Run 注册表（并清理旧启动项） |
-| 退出后显示任务栏 | 退出时是否恢复普通任务栏 |
-| 双击托盘 | 关闭智能模式并恢复普通任务栏（不会先闪菜单） |
+配置：`%LocalAppData%\TaskbarSense\settings.json`
 
-## 构建
+---
+
+## 功能摘要
+
+- 两种隐藏策略（互斥）  
+- 开机自启、退出恢复任务栏  
+- 托盘 Tooltip 显示当前状态  
+- 显示设置变化 / 解锁后自动刷新  
+
+---
+
+## 构建（开发者）
 
 ```powershell
 dotnet build Sources/SmartTaskbar.Win11/SmartTaskbar.Win11.csproj -c Release
@@ -54,8 +62,10 @@ dotnet publish Sources/SmartTaskbar.Win11/SmartTaskbar.Win11.csproj -c Release -
 
 Inno Setup：`installer/SmartTaskbar.Win11.iss`
 
+---
+
 ## 致谢与许可
 
-- 原版：[ChanpleCai/SmartTaskbar](https://github.com/ChanpleCai/SmartTaskbar)
-- 本项目：TaskbarSense / baolongzhanshi
+- 原版：[ChanpleCai/SmartTaskbar](https://github.com/ChanpleCai/SmartTaskbar)  
+- 本项目：TaskbarSense / baolongzhanshi  
 - [MIT License](LICENSE)

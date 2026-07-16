@@ -12,5 +12,16 @@ namespace SmartTaskbar.Win11.Languages
         public const string ModeOff = "tray_modeOff";
         public const string ModeHintTitle = "tray_modeHintTitle";
         public const string ModeHintText = "tray_modeHintText";
+        public const string FirstRunTitle = "tray_firstRunTitle";
+        public const string FirstRunText = "tray_firstRunText";
+        public const string ModeOffTipTitle = "tray_modeOffTipTitle";
+        public const string ModeOffTipText = "tray_modeOffTipText";
+        public const string AboutTitle = "tray_aboutTitle";
+        public const string AboutBody = "tray_aboutBody";
+        public const string AboutOpenGithub = "tray_aboutOpenGithub";
+        public const string StartupOnOk = "tray_startupOnOk";
+        public const string StartupOffOk = "tray_startupOffOk";
+        public const string StartupFailed = "tray_startupFailed";
+        public const string TooltipHint = "tray_tooltipHint";
     }
 }

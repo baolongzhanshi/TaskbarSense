@@ -118,33 +118,73 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="tray_about" xml:space="preserve">
-    <value>关于</value>
+    <value>关于 TaskbarSense</value>
   </data>
   <data name="tray_animation" xml:space="preserve">
-    <value>任务栏中的动画</value>
+    <value>系统任务栏图标动画</value>
   </data>
   <data name="tray_auto" xml:space="preserve">
-    <value>智能模式</value>
+    <value>靠近任务栏时自动隐藏</value>
   </data>
   <data name="tray_exit" xml:space="preserve">
     <value>退出</value>
   </data>
   <data name="tray_showBarOnExit" xml:space="preserve">
-    <value>退出后显示任务栏</value>
+    <value>退出软件时恢复任务栏</value>
   </data>
   <data name="tray_maximizeHide" xml:space="preserve">
-    <value>最大化隐藏模式</value>
+    <value>窗口最大化时隐藏任务栏</value>
   </data>
   <data name="tray_runAtStartup" xml:space="preserve">
-    <value>开机自启</value>
+    <value>开机自动启动</value>
   </data>
   <data name="tray_modeOff" xml:space="preserve">
-    <value>已关闭</value>
+    <value>未启用</value>
   </data>
   <data name="tray_modeHintTitle" xml:space="preserve">
     <value>TaskbarSense</value>
   </data>
   <data name="tray_modeHintText" xml:space="preserve">
-    <value>已启用智能隐藏。系统任务栏将切换为“自动隐藏”；关闭模式后会恢复普通任务栏。</value>
+    <value>已开启。系统任务栏会变为「自动隐藏」；取消勾选或双击托盘图标即可恢复普通任务栏。</value>
+  </data>
+  <data name="tray_firstRunTitle" xml:space="preserve">
+    <value>TaskbarSense 已在托盘运行</value>
+  </data>
+  <data name="tray_firstRunText" xml:space="preserve">
+    <value>图标可能在右下角「^」里。右键图标可设置；双击可关闭智能隐藏。</value>
+  </data>
+  <data name="tray_modeOffTipTitle" xml:space="preserve">
+    <value>已关闭智能隐藏</value>
+  </data>
+  <data name="tray_modeOffTipText" xml:space="preserve">
+    <value>任务栏已恢复为普通显示（不再自动隐藏）。</value>
+  </data>
+  <data name="tray_aboutTitle" xml:space="preserve">
+    <value>关于 TaskbarSense</value>
+  </data>
+  <data name="tray_aboutBody" xml:space="preserve">
+    <value>版本 {0}
+
+Windows 11 任务栏智能隐藏小工具。
+· 靠近任务栏时自动隐藏
+· 窗口最大化 / 全屏时隐藏
+· 开机自启、退出时恢复任务栏
+
+是否打开项目主页？</value>
+  </data>
+  <data name="tray_aboutOpenGithub" xml:space="preserve">
+    <value>打开 GitHub</value>
+  </data>
+  <data name="tray_startupOnOk" xml:space="preserve">
+    <value>已开启开机自启</value>
+  </data>
+  <data name="tray_startupOffOk" xml:space="preserve">
+    <value>已关闭开机自启</value>
+  </data>
+  <data name="tray_startupFailed" xml:space="preserve">
+    <value>无法修改开机自启，请检查系统权限或「设置 → 应用 → 启动」。</value>
+  </data>
+  <data name="tray_tooltipHint" xml:space="preserve">
+    <value>右键设置</value>
   </data>
 </root>

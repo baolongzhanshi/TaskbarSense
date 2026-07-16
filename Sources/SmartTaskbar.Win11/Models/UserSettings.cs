@@ -35,10 +35,11 @@ namespace SmartTaskbar.Win11.Models
                     _store.GetValue<bool?>(nameof(UserConfiguration.ShowTaskbarWhenExit)) ?? true,
                 RunAtStartup =
                     _store.GetValue<bool?>(nameof(UserConfiguration.RunAtStartup))
-                    ?? StartupRegistrationCoordinator.IsEffectivelyEnabled(_startup)
+                    ?? StartupRegistrationCoordinator.IsEffectivelyEnabled(_startup),
+                FirstRunTipShown =
+                    _store.GetValue<bool?>(nameof(UserConfiguration.FirstRunTipShown)) ?? false
             };
 
-            // Keep registry in sync and remove legacy Run keys.
             StartupRegistrationCoordinator.Apply(_startup, _configuration.RunAtStartup);
         }
 
@@ -80,6 +81,31 @@ namespace SmartTaskbar.Win11.Models
                 _store.SetValue(nameof(UserConfiguration.RunAtStartup), value);
                 StartupRegistrationCoordinator.Apply(_startup, value);
             }
+        }
+
+        public bool FirstRunTipShown
+        {
+            get => _configuration.FirstRunTipShown;
+            set
+            {
+                if (value == _configuration.FirstRunTipShown)
+                    return;
+
+                _configuration.FirstRunTipShown = value;
+                _store.SetValue(nameof(UserConfiguration.FirstRunTipShown), value);
+            }
+        }
+
+        /// <summary>
+        ///     Applies startup and returns whether the effective registry state matches the request.
+        /// </summary>
+        public bool TrySetRunAtStartup(bool enable)
+        {
+            RunAtStartup = enable;
+            var ok = enable
+                ? _startup.IsCurrentEnabled()
+                : !_startup.IsCurrentEnabled();
+            return ok;
         }
 
         public static string GetModeDisplayName(AutoModeType mode)
