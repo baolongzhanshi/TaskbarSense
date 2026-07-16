@@ -1,12 +1,12 @@
 ; TaskbarSense Installer
 ; Dual package:
 ;   Framework:
-;     ISCC /DMyAppSourceDir=...\publish-framework /DMyOutputBase=TaskbarSense_Setup_2.1.2_Framework /DMyPackageKind=framework installer\SmartTaskbar.Win11.iss
+;     ISCC /DMyAppSourceDir=...\publish-framework /DMyOutputBase=TaskbarSense_Setup_2.1.4_Framework /DMyPackageKind=framework installer\SmartTaskbar.Win11.iss
 ;   SelfContained:
-;     ISCC /DMyAppSourceDir=...\publish-selfcontained /DMyOutputBase=TaskbarSense_Setup_2.1.2_SelfContained /DMyPackageKind=selfcontained installer\SmartTaskbar.Win11.iss
+;     ISCC /DMyAppSourceDir=...\publish-selfcontained /DMyOutputBase=TaskbarSense_Setup_2.1.4_SelfContained /DMyPackageKind=selfcontained installer\SmartTaskbar.Win11.iss
 
 #define MyAppName "TaskbarSense"
-#define MyAppVersion "2.1.2"
+#define MyAppVersion "2.1.4"
 #define MyAppPublisher "baolongzhanshi"
 #define MyAppURL "https://github.com/baolongzhanshi/TaskbarSense"
 #define MyAppExeName "TaskbarSense.exe"
@@ -14,9 +14,11 @@
   #define MyAppSourceDir "d:\Desktop\SmartTaskbar\publish-selfcontained"
 #endif
 #define MyAppIcon "d:\Desktop\SmartTaskbar\Sources\SmartTaskbar.Win11\Resources\Logo-White.ico"
-#define MyOutputDir "D:\Downloads"
+#ifndef MyOutputDir
+  #define MyOutputDir "D:\Downloads"
+#endif
 #ifndef MyOutputBase
-  #define MyOutputBase "TaskbarSense_Setup_2.1.3_SelfContained"
+  #define MyOutputBase "TaskbarSense_Setup_2.1.4_SelfContained"
 #endif
 #ifndef MyPackageKind
   #define MyPackageKind "selfcontained"

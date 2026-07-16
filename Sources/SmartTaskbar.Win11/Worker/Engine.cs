@@ -189,10 +189,7 @@ namespace SmartTaskbar.Win11
             if (_timerCount % MaximizeScanIntervalTicks != 0)
                 return;
 
-            if (_maximizeDetector.HasMaximizedWindowOnMonitor(_taskbar.Monitor))
-                _taskbarControl.HideTaskbar(in _taskbar);
-            else
-                _taskbarControl.ShowTaskbar(in _taskbar);
+            MaximizeHidePolicy.Apply(in _taskbar, _maximizeDetector, _taskbarControl);
         }
 
         #endregion

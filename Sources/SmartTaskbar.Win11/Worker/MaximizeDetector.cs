@@ -2,7 +2,7 @@ using SmartTaskbar.Win11.Abstractions;
 
 namespace SmartTaskbar.Win11.Worker
 {
-    public class MaximizeDetector
+    public class MaximizeDetector : IMaximizePresence
     {
         private readonly IWindowEnumerationService _windowEnumeration;
         private readonly IWindowStateService _windowState;

@@ -10,7 +10,7 @@
     <Authors>baolongzhanshi</Authors>
     <Product>TaskbarSense</Product>
     <AssemblyTitle>TaskbarSense</AssemblyTitle>
-    <Version>2.1.3</Version>
+    <Version>2.1.4</Version>
     <Description>TaskbarSense - intelligent taskbar hide for Windows 11 (fork of SmartTaskbar)</Description>
     <Copyright>Copyright (c) 2018-2026 ChanpleCai; Copyright (c) 2026 baolongzhanshi (TaskbarSense)</Copyright>
     <RootNamespace>SmartTaskbar.Win11</RootNamespace>

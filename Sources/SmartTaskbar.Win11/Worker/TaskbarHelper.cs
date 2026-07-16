@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using SmartTaskbar.Win11.Worker;
 
 namespace SmartTaskbar.Win11
 {
@@ -410,8 +411,9 @@ namespace SmartTaskbar.Win11
         public static bool AreaCompare(this in TagRect rect, IntPtr referenceHwnd)
         {
             var bounds = GetSafeScreenBounds(referenceHwnd);
-            return 3 * (rect.bottom - rect.top) * (rect.right - rect.left)
-                   > bounds.Width * bounds.Height;
+            return ScreenAreaComparer.IsLargeEnough(
+                rect.left, rect.top, rect.right, rect.bottom,
+                bounds.Width, bounds.Height);
         }
 
         /// <summary>
